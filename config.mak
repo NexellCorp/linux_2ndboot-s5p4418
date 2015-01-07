@@ -1,10 +1,15 @@
 ###########################################################################
+# Build Version info
+###########################################################################
+VERINFO				= V05
+
+###########################################################################
 # Build Environment
 ###########################################################################
 DEBUG				= n
 
-CHIPNAME			= LF3000
-#CHIPNAME			= NXP4330
+#CHIPNAME			= LF3000
+CHIPNAME			= S5P4418
 
 ifeq ($(CHIPNAME),LF3000)
 BOOTFROM			= usb
@@ -14,11 +19,11 @@ BOOTFROM			= usb
 #BOOTFROM			= nand
 endif
 
-#BOARD				= pyxis
-#BOARD				= lynx
-#BOARD				= vtk
-BOARD				= drone
-#BOARD				= svt
+#BOARD				= _pyxis
+#BOARD				= _lynx
+#BOARD				= _vtk
+BOARD				= _drone
+#BOARD				= _svt
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -32,11 +37,11 @@ endif
 ###########################################################################
 # Top Names
 ###########################################################################
-PROJECT_NAME		= pyrope_2ndboot
+PROJECT_NAME		= $(CHIPNAME)_2ndboot
 ifeq ($(CHIPNAME),LF3000)
-TARGET_NAME			= $(PROJECT_NAME)_$(BOARD)_$(BOOTFROM)
+TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)$(BOARD)_$(BOOTFROM)
 else ifeq ($(CHIPNAME),NXP4330)
-TARGET_NAME			= $(PROJECT_NAME)
+TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)
 endif
 LDS_NAME			= $(PROJECT_NAME)
 
@@ -48,9 +53,9 @@ DIR_PROJECT_TOP		=
 
 DIR_OBJOUTPUT		= obj
 ifeq ($(CHIPNAME),LF3000)
-DIR_TARGETOUTPUT	= build_$(BOARD)_$(BOOTFROM)
+DIR_TARGETOUTPUT	= build$(BOARD)_$(BOOTFROM)
 else ifeq ($(CHIPNAME),NXP4330)
-DIR_TARGETOUTPUT	= build_$(BOARD)
+DIR_TARGETOUTPUT	= build$(BOARD)
 endif
 
 CODE_MAIN_INCLUDE	=
