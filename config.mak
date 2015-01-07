@@ -43,7 +43,7 @@ TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)$(BOARD)_$(BOOTFROM)
 else ifeq ($(CHIPNAME),NXP4330)
 TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)
 endif
-LDS_NAME			= $(PROJECT_NAME)
+LDS_NAME			= pyrope_2ndboot
 
 
 ###########################################################################
