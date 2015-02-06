@@ -31,6 +31,7 @@
 
 void ResetCon(U32 devicenum, CBOOL en);
 void GPIOSetAltFunction(U32 AltFunc);
+void NX_SDPADSetGPIO(U32 PortNum);
 
 extern U32 const SDResetNum[3];
 
@@ -108,7 +109,8 @@ CBOOL ProcessNSIH( FIL *file, U8 *pOutData )
 					writeval = 0;
 				}
 			}
-		}else
+		}
+		else
 			return CFALSE;
 	}
 
@@ -175,7 +177,8 @@ static CBOOL FSBoot(SDXCBOOTSTATUS * pSDXCBootStatus, struct NX_SecondBootInfo *
 		{
 			dprintf("Error: cannot open NXDATA.TBH\r\n");
 		}
-	}else
+	}
+	else
 	{
 		printf( "disk mount failure\r\n" );
 	}
@@ -204,15 +207,18 @@ static CBOOL FSBoot(SDXCBOOTSTATUS * pSDXCBootStatus, struct NX_SecondBootInfo *
 						dprintf( "NXDATA.TBL image read error size is different\r\n" );
 					}
 				}
-			}else
+			}
+			else
 			{
 				dprintf( "boot signature invalid\r\n" );
 			}
-		}else
+		}
+		else
 		{
 			dprintf( "file open failure\r\n" );
 		}
-	}else
+	}
+	else
 	{
 		dprintf( "disk mount failure\r\n" );
 	}
@@ -237,7 +243,8 @@ static	CBOOL	SDMMCFSBOOT( SDXCBOOTSTATUS * pSDXCBootStatus, struct NX_SecondBoot
 		}
 //		return CFALSE;
 		result = FSBoot(pSDXCBootStatus, pTBI);
-	}else
+	}
+	else
 	{
 		dprintf( "SDMMC open fail\r\n" );
 	}
@@ -267,7 +274,7 @@ U32	iSDXCFSBOOT( struct NX_SecondBootInfo * pTBI )
 	result = SDMMCFSBOOT(pSDXCBootStatus, pTBI);
 	NX_SDMMC_Terminate(pSDXCBootStatus);
 
-	NX_SDPADSetGPIO(pSDXCBootStatus->SDPort);
+//	NX_SDPADSetGPIO(pSDXCBootStatus->SDPort);
 
 	return result;
 }

@@ -278,7 +278,7 @@ extern U32 getremainder(int dividend, int divisor);
 extern struct NX_SecondBootInfo * const pSBI;
 extern void __pllchange(volatile U32 data, volatile U32* addr, U32 delaycount);
 
-static struct NX_CLKPWR_RegisterSet * const clkpwr = (struct    NX_CLKPWR_RegisterSet *)PHY_BASEADDR_CLKPWR_MODULE;
+struct NX_CLKPWR_RegisterSet * const clkpwr = (struct    NX_CLKPWR_RegisterSet *)PHY_BASEADDR_CLKPWR_MODULE;
 static U32 __g_OSC_KHz;
 
 void NX_CLKPWR_SetOSCFreq( U32 FreqKHz )
@@ -335,7 +335,7 @@ void initClock(void)
     // pll change
 #if (CFG_NSIH_EN == 0)
     // PLL0 for memory
-    _GET_PLL01(666, PLL_PMS);
+    _GET_PLL01(500, PLL_PMS);
     clkpwr->PLLSETREG[0] = (U32)PLL_PMS;
 
     // PLL1 for CPU
@@ -343,15 +343,15 @@ void initClock(void)
     clkpwr->PLLSETREG[1] = (U32)PLL_PMS;
 
     // PLL2 for BCLK, 3DCLK
-    _GET_PLL23(800, PLL_PMS);
+    _GET_PLL23(614, PLL_PMS);
     clkpwr->PLLSETREG[2] = (U32)PLL_PMS;
 
     // PLL3 for others (Audio)
-    _GET_PLL23(614, PLL_PMS);
+    _GET_PLL23(800, PLL_PMS);
     clkpwr->PLLSETREG[3] = (U32)PLL_PMS;
 
-//    clkpwr->PLLSETREG_SSCG[2] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
-    clkpwr->PLLSETREG_SSCG[3] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
+    clkpwr->PLLSETREG_SSCG[2] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
+//    clkpwr->PLLSETREG_SSCG[3] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
 
     // CPUDVOREG
     clkpwr->DVOREG[0] = (U32)((NX_CLKSRC_PLL_1<<CLKSRC)|    // PLL Select
@@ -359,22 +359,22 @@ void initClock(void)
                             ((4-1)<<DVO1));                 // HCLK ==> CPU bus (max 250MHz)
 
     // BUSDVOREG
-    clkpwr->DVOREG[1] = (U32)((NX_CLKSRC_PLL_2<<CLKSRC)|    // PLL Select
+    clkpwr->DVOREG[1] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
                             ((2-1)<<DVO0)|                  // BCLK ==> System bus (max 333MHz)
                             ((2-1)<<DVO1));                 // PCLK ==> Peripheral bus (max 166MHz)
 
     // MEMDVOREG
-    clkpwr->DVOREG[2] = (U32)((NX_CLKSRC_PLL_2<<CLKSRC)|    // PLL Select
+    clkpwr->DVOREG[2] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
                             ((1-1)<<DVO0)|                  // MDCLK ==> Memory DLL (max 800MHz)
                             ((1-1)<<DVO1)|                  // MCLK  ==> Memory DDR (max 800MHz)
                             ((2-1)<<DVO2)|                  // MBCLK ==> MCU bus (max 400MHz)
                             ((2-1)<<DVO3));                 // MPCLK ==> MCU Peripheral bus (max 200MHz)
 
-    clkpwr->DVOREG[3] = (U32)((NX_CLKSRC_PLL_0<<CLKSRC)|    // GRP3DVOREG
-                            ((1-1)<<DVO0)|                  // GR3DBCLK ==> GPU bus & core (max 333MHz)
+    clkpwr->DVOREG[3] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // GRP3DVOREG
+                            ((2-1)<<DVO0)|                  // GR3DBCLK ==> GPU bus & core (max 333MHz)
                             ((2-1)<<DVO1));                 // GR3DPCLK ==> not used
 
-    clkpwr->DVOREG[4] = (U32)((NX_CLKSRC_PLL_2<<CLKSRC)|    // MPEGDVOREG
+    clkpwr->DVOREG[4] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // MPEGDVOREG
                             ((2-1)<<DVO0)|                  // MPEGBCLK ==> MPEG bus & core (max 300MHz)
                             ((2-1)<<DVO1));                 // MPEGPCLK ==> MPEG control if (max 150MHz)
 #else
@@ -401,7 +401,7 @@ void initClock(void)
         while((clkpwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
         if( clkpwr->PWRMODE & 0x1<<15 )
         {
-//            SYSMSG("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
+//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
             while(1);        // system reset code need.
         }
     }

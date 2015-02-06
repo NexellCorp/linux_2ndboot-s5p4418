@@ -24,9 +24,10 @@ LDFLAGS		=	-Bstatic							\
 			-nostdlib
 
 SYS_OBJS	=	startup.o secondboot.o				\
-			resetcon.o CRYPTO.o GPIO.o CRC32.o		\
-			clockinit.o debug.o printf.o util.o
+			resetcon.o GPIO.o CRC32.o			\
+			clockinit.o debug.o printf.o util.o buildinfo.o
 SYS_OBJS	+=	MemoryInit.o
+#SYS_OBJS	+=	CRYPTO.o
 #SYS_OBJS	+=	nx_tieoff.o
 
 ifeq ($(CHIPNAME),LF3000)
@@ -34,7 +35,7 @@ ifeq ($(BOOTFROM),usb)
 SYS_OBJS += iUSBBOOT.o
 endif
 ifeq ($(BOOTFROM),spi)
-SYS_OBJS += iSPIBOOT.o
+SYS_OBJS += iSPIBOOT.o CRYPTO.o
 endif
 ifeq ($(BOOTFROM),sdmmc)
 SYS_OBJS += iSDHCBOOT.o

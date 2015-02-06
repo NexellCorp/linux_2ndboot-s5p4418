@@ -1,15 +1,15 @@
 ###########################################################################
 # Build Version info
 ###########################################################################
-VERINFO				= V05
+VERINFO				= V054
 
 ###########################################################################
 # Build Environment
 ###########################################################################
 DEBUG				= n
 
-#CHIPNAME			= LF3000
-CHIPNAME			= S5P4418
+CHIPNAME			= LF3000
+#CHIPNAME			= NXP4330
 
 ifeq ($(CHIPNAME),LF3000)
 BOOTFROM			= usb
@@ -27,17 +27,17 @@ BOARD				= _drone
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
-CROSS_TOOL_TOP		=
+CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-none-eabi-
 else
-CROSS_TOOL_TOP		= 
+CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-cortex_a9-linux-gnueabi-
 endif
 
 ###########################################################################
 # Top Names
 ###########################################################################
-PROJECT_NAME		= $(CHIPNAME)_2ndboot
+PROJECT_NAME			= $(CHIPNAME)_2ndboot
 ifeq ($(CHIPNAME),LF3000)
 TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)$(BOARD)_$(BOOTFROM)
 else ifeq ($(CHIPNAME),NXP4330)
@@ -49,25 +49,25 @@ LDS_NAME			= pyrope_2ndboot
 ###########################################################################
 # Directories
 ###########################################################################
-DIR_PROJECT_TOP		=
+DIR_PROJECT_TOP			=
 
-DIR_OBJOUTPUT		= obj
+DIR_OBJOUTPUT			= obj
 ifeq ($(CHIPNAME),LF3000)
-DIR_TARGETOUTPUT	= build$(BOARD)_$(BOOTFROM)
+DIR_TARGETOUTPUT		= build$(BOARD)_$(BOOTFROM)
 else ifeq ($(CHIPNAME),NXP4330)
-DIR_TARGETOUTPUT	= build$(BOARD)
+DIR_TARGETOUTPUT		= build$(BOARD)
 endif
 
-CODE_MAIN_INCLUDE	=
+CODE_MAIN_INCLUDE		=
 
 ###########################################################################
 # Build Environment
 ###########################################################################
-CPU					= cortex-a9
-CC					= $(CROSS_TOOL)gcc
-LD 					= $(CROSS_TOOL)ld
-AS 					= $(CROSS_TOOL)as
-AR 					= $(CROSS_TOOL)ar
+CPU				= cortex-a9
+CC				= $(CROSS_TOOL)gcc
+LD 				= $(CROSS_TOOL)ld
+AS 				= $(CROSS_TOOL)as
+AR 				= $(CROSS_TOOL)ar
 MAKEBIN				= $(CROSS_TOOL)objcopy
 RANLIB 				= $(CROSS_TOOL)ranlib
 
@@ -75,10 +75,10 @@ GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
 
 ifeq ($(DEBUG), y)
 CFLAGS				= -DNX_DEBUG -O0
-Q					=
+Q				=
 else
 CFLAGS				= -DNX_RELEASE -Os
-Q					= @
+Q				= @
 endif
 
 ###########################################################################
@@ -86,18 +86,18 @@ endif
 ###########################################################################
 ifeq ($(OS),Windows_NT)
 MKDIR				= mkdir
-RM					= del /q /F
-MV					= move
-CD					= cd
-CP					= copy
+RM				= del /q /F
+MV				= move
+CD				= cd
+CP				= copy
 ECHO				= echo
 RMDIR				= rmdir /S /Q
 else
 MKDIR				= mkdir
-RM					= rm -f
-MV					= mv
-CD					= cd
-CP					= cp
+RM				= rm -f
+MV				= mv
+CD				= cd
+CP				= cp
 ECHO				= echo
 RMDIR				= rm -rf
 endif

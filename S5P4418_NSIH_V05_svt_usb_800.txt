@@ -84,7 +84,7 @@ FFFF0000	// 0x04C : Launch Address for 2ndboot.
 // DDR AC Timing Configuration
 0000401B	// 0x09C	/tPZQ:128000us
 00000618	// 0x0A0	/Refresh Interval:7.8us
-6836650F	// 0x0A4	/tRFC:260ns(tCK)	/tRRD:7.5ns(tCK)	/tRP:13.75ns(tCK)	/tRCD:13.75ns(tCK)	/tRC:48.75ns(tCK)	/tRAS:35ns(tCK)
+6836650E	// 0x0A4	/tRFC:260ns(tCK)	/tRRD:7.5ns(tCK)	/tRP:13.75ns(tCK)	/tRCD:13.75ns(tCK)	/tRC:48.75ns(tCK)	/tRAS:35ns(tCK)
 3631880B	// 0x0A8	/tWTR:7.5ns(tCK)	/tWR:15ns(tCK)	/tRTP:7.5ns(tCK)
 41000A26	// 0x0AC	/tFAW:40ns(tCK)	/tXSR:256ns(tCK)	/tXP:24ns(tCK)	/tCKE:5ns(tCK)
 
@@ -173,7 +173,7 @@ FFFF0000	// 0x04C : Launch Address for 2ndboot.
 00000000	// 0x1EC
 00000000	// 0x1F0
 00000000	// 0x1F4
-00000000	// 0x1F8
+44180500	// 0x1F8, BuildInfo
 
 //------------------------------------------------------------------------------
 // Signature

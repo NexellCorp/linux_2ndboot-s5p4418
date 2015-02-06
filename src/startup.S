@@ -48,7 +48,11 @@ Vectors:
         b       .                   //; 1C - FIQ interrupts
 .global Sleep
 Sleep:
-        b       SystemSleep
+        b       SystemSleep         //; 20
+
+BuildInfo:
+        .word   0x44180504          //; 24, , Chip name - 4418, Build num - v0.5.04
+
 //        b       DynamicPllChange    //; for Samsung VD
 
 ExceptionV:

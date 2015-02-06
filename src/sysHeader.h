@@ -64,6 +64,7 @@
 //------------------------------------------------------------------------------
 
 #if defined(__SET_GLOBAL_VARIABLES)
+
 struct NX_SecondBootInfo                * const pSBI = (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
 struct NX_SecondBootInfo                * const pTBI = (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
 struct NX_GPIO_RegisterSet             (* pReg_GPIO)[1] = (struct NX_GPIO_RegisterSet (*)[])PHY_BASEADDR_GPIOA_MODULE;

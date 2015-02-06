@@ -122,6 +122,7 @@ CBOOL DebugInit( void )
 	pReg_UartClkGen->CLKENB	= (1<<3) | (1<<2);		// PCLKMODE : always, Clock Gen Enable
 
 	pReg_Uart->CR		= 0x0301;	// rx, tx, uart enable
+	//--------------------------------------------------------------------------
 
 	return CTRUE;
 }

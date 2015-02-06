@@ -114,14 +114,16 @@
 
 #define BASEADDR_SRAM			(0xFFFF0000)
 
-#if defined(ARCH_NXP4330) || defined(ARCH_S5P4418)
+#if defined(ARCH_NXP4330)
+#define INTERNAL_SRAM_SIZE		(16*1024)		// 16KB
+#endif
+#if defined(ARCH_S5P4418)
 #define INTERNAL_SRAM_SIZE		(32*1024)		// 32KB
-#define SECONDBOOT_STACK		0x1000
 #endif
 #if defined(ARCH_NXP5430)
 #define INTERNAL_SRAM_SIZE		(64*1024)		// 64KB
-#define SECONDBOOT_STACK		0x1000
 #endif
+#define SECONDBOOT_STACK		0x1000
 
 #define BASEADDR_NFMEM			(0x2C000000)
 #define BASEADDR_DDRSDRAM		(0x80000000)

@@ -45,11 +45,11 @@ extern CBOOL    iNANDBOOTEC(struct NX_SecondBootInfo * pTBI);
 extern CBOOL    iSDXCFSBOOT(struct NX_SecondBootInfo * pTBI);
 extern void     initClock(void);
 extern void     initDDR3(U32);
+extern void     buildinfo(void);
 
 extern void     printClkInfo(void);
 
 extern void     ResetCon(U32 devicenum, CBOOL en);
-
 
 //------------------------------------------------------------------------------
 #if (AUTO_DETECT_EMA == 1)
@@ -66,7 +66,7 @@ static struct asv_tb_info asv_tables[] = {
     [4] = { .ids = 50, .ro = 170, },
 };
 
-#define	ASV_ARRAY_SIZE  (int)(sizeof(asv_tables)/sizeof(asv_tables[0]))
+#define ASV_ARRAY_SIZE  (int)(sizeof(asv_tables)/sizeof(asv_tables[0]))
 
 static inline U32 MtoL(U32 data, int bits)
 {
@@ -134,7 +134,6 @@ void setEMA(void)
 #endif
     U32 ema, temp;
 
-    temp = ReadIO32( &pReg_Tieoff->TIEOFFREG[1] ) & ~(7<<2);
 #if (AUTO_DETECT_EMA == 1)
     ecid_1 = ReadIO32(PHY_BASEADDR_ECID_MODULE + (1<<2));
     ecid_2 = ReadIO32(PHY_BASEADDR_ECID_MODULE + (2<<2));
@@ -146,10 +145,19 @@ void setEMA(void)
 #else
     ema = EMA_VALUE;                            //; cortex-A9 L1 Cache EMA value (1: 1.1V, 3: 1.0V)
 #endif
-    temp |= (ema<<2);
     flushICache();
     enableICache(CFALSE);
+
+    // L2 Cache
+    temp = ReadIO32( &pReg_Tieoff->TIEOFFREG[0] ) & ~(7<<22);
+    temp |= (ema<<22);
+    WriteIO32( &pReg_Tieoff->TIEOFFREG[0],  temp );
+
+    // L1 Cache
+    temp = ReadIO32( &pReg_Tieoff->TIEOFFREG[1] ) & ~(7<<2);
+    temp |= (ema<<2);
     WriteIO32( &pReg_Tieoff->TIEOFFREG[1],  temp );
+
     enableICache(CTRUE);
 
     printf("EMA VALUE : %s\r\n", (ema == 3 ? "011" : "001") );
@@ -241,8 +249,12 @@ void SubCPUBoot( U32 CPUID )
 #endif
 
 
+struct NX_CLKPWR_RegisterSet * const clkpwr;
 void sleepMain( void )
 {
+//    WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC801 );       //; set PLL1 - 800Mhz
+    WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC802 );       //; set PLL1 - 400Mhz
+
     DebugInit();
     enterSelfRefresh();
 }
@@ -250,18 +262,23 @@ void sleepMain( void )
 
 void vddPowerOff( void )
 {
-    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000001 );   //; alive power gate open
+    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000001 );       //; alive power gate open
 
-    WriteIO32( &pReg_Alive->VDDOFFCNTVALUERST,  0xFFFFFFFF );   //; clear delay counter, refrence rtc clock
-    WriteIO32( &pReg_Alive->VDDOFFCNTVALUESET,  0x00000001 );   //; no need delay time
+    WriteIO32( &pReg_Alive->VDDOFFCNTVALUERST,  0xFFFFFFFF );       //; clear delay counter, refrence rtc clock
+    WriteIO32( &pReg_Alive->VDDOFFCNTVALUESET,  0x00000001 );       //; set minimum delay time for VDDPWRON pin. 1 cycle per 32.768Kh (about 30us)
 
-    WriteIO32( &pReg_Alive->VDDCTRLRSTREG,      0x00000001 );   //; vddpoweron off, start delay counter
+    __asm__ __volatile__ ("cpsid i");                               // core interrupt off.
+    WriteIO32( &pReg_Alive->VDDCTRLRSTREG,      0x00000001 );       //; vddpoweron off, start counting down.
+
+    DMC_Delay(600);     // 600 : 110us, Delay for Pending Clear. When CPU clock is 400MHz, this value is minimum delay value.
+
+    WriteIO32( &pReg_Alive->ALIVEGPIODETECTPENDREG, 0xFF );         //; all alive pend pending clear until power down.
+    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 );       //; alive power gate close
 
     while(1)
     {
-        __asm__ __volatile__ ("wfi");                           //; now real entering point to stop mode.
-        WriteIO32( &pReg_Alive->ALIVEGPIODETECTPENDREG, 0xFF ); //; all alive pend pending clear until power down.
-    }                                                           //; this time, core power will off and so cpu will die.
+        __asm__ __volatile__ ("wfi");                               //; now real entering point to stop mode.
+    }                                                               //; this time, core power will off and so cpu will die.
 }
 
 
@@ -362,11 +379,10 @@ void BootMain( U32 CPUID )
     DebugInit();
 
 
-    printf( "\r\n" );
-    printf( "--------------------------------------------------------------------------------\r\n" );
-    printf( " Second Boot by Nexell Co. : Ver0.5 - Built on %s %s\r\n", __DATE__, __TIME__ );
-    printf( "--------------------------------------------------------------------------------\r\n" );
-
+    //--------------------------------------------------------------------------
+    // build information. version, build time and date
+    //--------------------------------------------------------------------------
+    buildinfo();
 
     //--------------------------------------------------------------------------
     // set EMA value
