@@ -502,7 +502,7 @@ static CBOOL	NANDFlash_ReadSector( NANDBOOTECSTATUS *pBootStatus, U32 *pData, CB
 //------------------------------------------------------------------------------
 CBOOL	iNANDBOOTEC( struct NX_SecondBootInfo * pTBI )
 {
-	CBOOL Result = CTRUE;
+	CBOOL Result = CTRUE, isRescueBoot = CFALSE;
 	U32 dwBinAddr, iBinSecLeft;
 	NANDBOOTECSTATUS BootStatus, *pBootStatus;
 	U32 TBI[1024/4], temp[1024/4];
@@ -535,7 +535,9 @@ CBOOL	iNANDBOOTEC( struct NX_SecondBootInfo * pTBI )
 
 	if(NANDFlash_Open(pBootStatus))
 	{
-		U32 ImageIndex, imax = pSBI->DBI.NANDBI.CopyCount;
+		U32 ImageIndex, imax;
+RescueBoot:
+		imax = pSBI->DBI.NANDBI.CopyCount;
 		printf("copy count : %d\r\n", imax);
 		for(ImageIndex=0; ImageIndex<(1024/32); ImageIndex++)
 			pBootStatus->pReadDoneFlag[ImageIndex] = 0;
@@ -557,7 +559,7 @@ CBOOL	iNANDBOOTEC( struct NX_SecondBootInfo * pTBI )
 
 		if(ImageIndex<imax)
 		{
-			if(plTBI->SIGNATURE == HEADER_ID)
+			if(HEADER_ID == plTBI->SIGNATURE)
 			{
 				U32 sum;
 
@@ -652,6 +654,17 @@ CBOOL	iNANDBOOTEC( struct NX_SecondBootInfo * pTBI )
 		{
 			printf("cannot read boot header! nand boot failure\r\n");
 			Result = CFALSE;
+		}
+		if(CFALSE == Result)
+		{
+			if(CFALSE == isRescueBoot)
+			{
+				printf("normal nand boot failure, try to rescue boot\r\n");
+				pSBI->DEVICEADDR = 32*0x100000;	// 0: 2ndboot, 32MB: rescue boot, 64MB: normal 3rdboot
+				Result = CTRUE;
+				isRescueBoot = CTRUE;
+				goto RescueBoot;
+			}
 		}
 	}else
 	{

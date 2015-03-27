@@ -471,6 +471,7 @@ void PLLDynamicChange(U32 Freq)
 
 void printClkInfo(void)
 {
+#if 1
     SYSMSG(" PLL0: %d   PLL1: %d   PLL2: %d   PLL3: %d\r\n\r\n",
             NX_CLKPWR_GetPLLFreq(0),
             NX_CLKPWR_GetPLLFreq(1),
@@ -518,4 +519,5 @@ void printClkInfo(void)
             getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(4))
                     ,((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(4)>> 8)&0x3F)));
+#endif
 }

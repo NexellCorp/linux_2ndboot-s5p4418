@@ -26,6 +26,7 @@
 #define AUTO_DETECT_EMA     (1)
 #define EMA_VALUE           (1)     // Manual setting - 1(001): 1.1V, 3(011): 1.0V
 
+extern void     __pllchange(volatile U32 data, volatile U32* addr, U32 delaycount);
 extern U32      iget_fcs(U32 fcs, U32 data);
 extern U32      __calc_crc(void *addr, int len);
 extern void     DMC_Delay(int milisecond);
@@ -255,6 +256,20 @@ void sleepMain( void )
 //    WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC801 );       //; set PLL1 - 800Mhz
     WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC802 );       //; set PLL1 - 400Mhz
 
+#if 0
+    __pllchange(clkpwr->PWRMODE | 0x1<<15, &clkpwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+
+    {
+        volatile U32 delay = 0x100000;
+        while((clkpwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( clkpwr->PWRMODE & 0x1<<15 )
+        {
+//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
+            while(1);        // system reset code need.
+        }
+    }
+#endif
+
     DebugInit();
     enterSelfRefresh();
 }
@@ -267,7 +282,7 @@ void vddPowerOff( void )
     WriteIO32( &pReg_Alive->VDDOFFCNTVALUERST,  0xFFFFFFFF );       //; clear delay counter, refrence rtc clock
     WriteIO32( &pReg_Alive->VDDOFFCNTVALUESET,  0x00000001 );       //; set minimum delay time for VDDPWRON pin. 1 cycle per 32.768Kh (about 30us)
 
-    __asm__ __volatile__ ("cpsid i");                               // core interrupt off.
+    __asm__ __volatile__ ("cpsid i");                               //; core interrupt off.
     WriteIO32( &pReg_Alive->VDDCTRLRSTREG,      0x00000001 );       //; vddpoweron off, start counting down.
 
     DMC_Delay(600);     // 600 : 110us, Delay for Pending Clear. When CPU clock is 400MHz, this value is minimum delay value.
@@ -417,27 +432,32 @@ void BootMain( U32 CPUID )
 #if (CPU_BRINGUP_CHECK == 1)
 {
     volatile U32 *aliveflag = (U32*)CPU_ALIVE_FLAG_ADDR;
-    int i, delay, retry;
-    for(i = 1; i < 4; )
+    int CPUNumber, retry = 0;
+
+    for(CPUNumber = 1; CPUNumber < 4; )
     {
+        register volatile U32 delay;
         *aliveflag = 0;
         delay = 0x10000;
-        TurnOnCPUnonedelay(i);
-        while((*aliveflag == 0) && --delay);
+        TurnOnCPUnonedelay(CPUNumber);
+        while((*aliveflag == 0) && (--delay));
         if(delay == 0)
         {
             if(retry > 3)
             {
-                printf("maybe cpu %d is dead. -_-;\r\n", i);
-                i++;
+                printf("maybe cpu %d is dead. -_-;\r\n", CPUNumber);
+                CPUNumber++;
             }
             else
-                printf("cpu %d is not bringup, retry\r\n", i);
+            {
+                printf("cpu %d is not bringup, retry\r\n", CPUNumber);
+                retry++;
+            }
         }
         else
         {
             retry = 0;
-            i++;
+            CPUNumber++;
         }
     }
 }
