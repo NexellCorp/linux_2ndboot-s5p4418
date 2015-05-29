@@ -20,6 +20,8 @@
 #include "sysHeader.h"
 #include <nx_ssp.h>
 
+#define CFG_WRITE_EN    (0)         // Control write protect
+
 //------------------------------------------------------------------------------
 
 #define SER_WREN		0x06		// Set Write Enable Latch
@@ -43,15 +45,15 @@
 #define	EEPROM_ADDR		3			// winbond W25Q128FV
 
 #define SPI_SOURCE_CLOCK	0
-#define SPI_SOURCE_DIVID	(20UL)				// 800000000/20 = 40MHz
+#define SPI_SOURCE_DIVID	(20UL)		// 800000000/20 = 40MHz
 
 #define LOAD_FLASH_ADDR		0x10000		// 64KB
 
-#define SSPFIFOSTATUS_BSY	4	// tx/rx frame is busy
-#define SSPFIFOSTATUS_RFF	3	// receive fifo full
-#define SSPFIFOSTATUS_RNE	2	// receive fifo not empty
-#define SSPFIFOSTATUS_TNF	1	// transmit fifo not full
-#define SSPFIFOSTATUS_TFE	0	// transmit fifo empty
+#define SSPFIFOSTATUS_BSY	4		// tx/rx frame is busy
+#define SSPFIFOSTATUS_RFF	3		// receive fifo full
+#define SSPFIFOSTATUS_RNE	2		// receive fifo not empty
+#define SSPFIFOSTATUS_TNF	1		// transmit fifo not full
+#define SSPFIFOSTATUS_TFE	0		// transmit fifo empty
 
 extern U32  getquotient(U32 dividend, U32 divisor);
 extern U32  get_fcs(U32 fcs, U8 data);
@@ -76,13 +78,13 @@ CBOOL   NX_SPI_GetClkParam( NX_CLKINFO_SPI *pClkInfo )
     srcFreq = NX_CLKPWR_GetPLLFreq(pClkInfo->nPllNum);
 
 retry_getparam:
-    for (pClkInfo->nClkDiv = 2; ; pClkInfo->nClkDiv += 2)
+    for (pClkInfo->nClkDiv = 1; ; pClkInfo->nClkDiv ++)
     {
         nTemp   = (pClkInfo->nFreqHz * pClkInfo->nClkDiv);
         pClkInfo->nClkGenDiv  = getquotient(srcFreq, nTemp);      // (srcFreq / nTemp)
 
         if (srcFreq > (pClkInfo->nFreqHz * pClkInfo->nClkDiv))
-            pClkInfo->nClkGenDiv+=2;
+            pClkInfo->nClkGenDiv++;
 
         if (pClkInfo->nClkGenDiv < 255)
             break;
@@ -118,36 +120,64 @@ static struct NX_SSP_RegisterSet * const pSSPSPIReg = (struct NX_SSP_RegisterSet
 
 void SPI_Init(void)
 {
-	register U32 *pGPIOxRegC = (U32 *)&pReg_GPIO[2]->GPIOxALTFN[1];
-	register U32 *pGPIOxRegD = (U32 *)&pReg_GPIO[3]->GPIOxALTFN[0];
-	*pGPIOxRegC = (*pGPIOxRegC & ~0xFCC00000) | 0x54400000;
-	*pGPIOxRegD = (*pGPIOxRegD & ~0x00000003) | 0x00000001;
+    register struct NX_GPIO_RegisterSet * pGPIOxRegC = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
+    register struct NX_GPIO_RegisterSet * pGPIOxRegD = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_D];
+#if 1
+    NX_CLKINFO_SPI clkInfo;
+    CBOOL ret;
+
+    clkInfo.nPllNum = NX_CLKSRC_SPI;
+    clkInfo.nFreqHz = 40000000;
+
+    ret = NX_SPI_GetClkParam( &clkInfo );
+    if (ret == CFALSE)
+        printf("get clock param faile.\r\n");
+#endif
+
+#if (CFG_WRITE_EN == 1)
+	pGPIOxRegC->GPIOxALTFN[1] = (pGPIOxRegC->GPIOxALTFN[1] & ~0xFCC00000) | 0x54400000; // GPIO C[27, 29, 30, 31] ALT1
+#else
+	pGPIOxRegC->GPIOxALTFN[1] = (pGPIOxRegC->GPIOxALTFN[1] & ~0xFC000000) | 0x54000000; // GPIO C[29, 30, 31] ALT1
+#endif
+	pGPIOxRegD->GPIOxALTFN[0] = (pGPIOxRegD->GPIOxALTFN[0] & ~0x00000003) | 0x00000001; // GPIO D[0] ALT1
+
+#if 1
+    pGPIOxRegC->GPIOx_SLEW                      &= ~(1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_SLEW_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_DRV0                      |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_DRV0_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_DRV1                      |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_DRV1_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_PULLSEL                   |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_PULLSEL_DISABLE_DEFAULT   |=  (1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_PULLENB                   &= ~(1<<31 | 1<<30 | 1<<29);
+    pGPIOxRegC->GPIOx_PULLENB_DISABLE_DEFAULT   |=  (1<<31 | 1<<30 | 1<<29);
+
+    pGPIOxRegD->GPIOx_SLEW                      &= ~(1<<0);
+    pGPIOxRegD->GPIOx_SLEW_DISABLE_DEFAULT      |=  (1<<0);
+    pGPIOxRegD->GPIOx_DRV0                      |=  (1<<0);
+    pGPIOxRegD->GPIOx_DRV0_DISABLE_DEFAULT      |=  (1<<0);
+    pGPIOxRegD->GPIOx_DRV1                      |=  (1<<0);
+    pGPIOxRegD->GPIOx_DRV1_DISABLE_DEFAULT      |=  (1<<0);
+    pGPIOxRegD->GPIOx_PULLSEL                   |=  (1<<0);
+    pGPIOxRegD->GPIOx_PULLSEL_DISABLE_DEFAULT   |=  (1<<0);
+    pGPIOxRegD->GPIOx_PULLENB                   &= ~(1<<0);
+    pGPIOxRegD->GPIOx_PULLENB_DISABLE_DEFAULT   |=  (1<<0);
+#endif
 
 	ResetCon(RESETINDEX_OF_SSP0_MODULE_PRESETn, CFALSE);	// reset negate
 	ResetCon(RESETINDEX_OF_SSP0_MODULE_nSSPRST, CFALSE);	// reset negate
 
-#if 1
-		NX_CLKINFO_SPI clkInfo;
-		CBOOL ret;
-
-		clkInfo.nPllNum = NX_CLKSRC_SPI;
-		clkInfo.nFreqHz = 40000000;
-
-		ret = NX_SPI_GetClkParam( &clkInfo );
-		if (ret == CFALSE)
-			printf("get clock param faile.\r\n");
-#endif
-
 #if 0
-	pSSPClkGenReg->CLKENB = 0x1<<3; // pclk mode on but not supply operation clock
-	pSSPClkGenReg->CLKGEN[0] = (SPI_SOURCE_DIVID-1)<<5 | 0x0<<2;	// select clock source is pll0, 800MHz and supply clock is 800/20 = 40.000MHz
-	pSSPClkGenReg->CLKENB = 0x1<<3 | 0x1<<2;	// supply operation clock
+	pSSPClkGenReg->CLKENB       = 0x1<<3; // pclk mode on but not supply operation clock
+	pSSPClkGenReg->CLKGEN[0]    = (SPI_SOURCE_DIVID-1)<<5 | 0x0<<2;	// select clock source is pll0, 800MHz and supply clock is 800/20 = 40.000MHz
+	pSSPClkGenReg->CLKENB       = 0x1<<3 | 0x1<<2;	// supply operation clock
 #else
-	pSSPClkGenReg->CLKENB = 0x1<<3; // pclk mode on but not supply operation clock
-	pSSPClkGenReg->CLKGEN[0] = ((clkInfo.nClkGenDiv-1)<<5) | (clkInfo.nPllNum<<2);	// select clock source is pll0, 800MHz and supply clock is 800/20 = 40.000MHz
-	pSSPClkGenReg->CLKENB = 0x1<<3 | 0x1<<2;	// supply operation clock
-
+	pSSPClkGenReg->CLKENB       = 0x1<<3; // pclk mode on but not supply operation clock
+	pSSPClkGenReg->CLKGEN[0]    = ((clkInfo.nClkGenDiv-1)<<5) | (clkInfo.nPllNum<<2);	// select clock source is pll0, 800MHz and supply clock is 800/20 = 40.000MHz
+	pSSPClkGenReg->CLKENB       = 0x1<<3 | 0x1<<2;	// supply operation clock
 #endif
+
 	pSSPSPIReg->SSPCR0 =
 		(2-1)<<8|		// clock divider(0~255) 40.000MHz/(CPSDVR x (SCR + 1)) 	40.000/(2 * ((2-1) + 1)) = 10.0MHz
 		0x1<<7	|		// clk out phase (SPH)
@@ -179,22 +209,26 @@ void SPI_Init(void)
 
 void SPI_Deinit(void)
 {
-	register U32 *pGPIOxRegC = (U32 *)&pReg_GPIO[(PADINDEX_OF_SSP0_SSPCLK_IO>>8)&0x7]->GPIOxALTFN[(PADINDEX_OF_SSP0_SSPCLK_IO>>6)&0x1];
-	register U32 *pGPIOxRegD = (U32 *)&pReg_GPIO[(PADINDEX_OF_SSP0_SSPRXD>>8)&0x7]->GPIOxALTFN[(PADINDEX_OF_SSP0_SSPRXD>>6)&0x1];
+    register struct NX_GPIO_RegisterSet * pGPIOxRegC = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
+    register struct NX_GPIO_RegisterSet * pGPIOxRegD = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_D];
 
-	pSSPSPIReg->SSPCR1 &= ~(0x1<<1);			// SPI Stop
+	pSSPSPIReg->SSPCR1     &= ~(0x1<<1);		// SPI Stop
 
-	pSSPClkGenReg->CLKENB	= 0;				// PCLKMODE : disable, Clock Gen Disable
+	pSSPClkGenReg->CLKENB   = 0;				// PCLKMODE : disable, Clock Gen Disable
 
 	//--------------------------------------------------------------------------
 	ResetCon(RESETINDEX_OF_SSP0_MODULE_PRESETn, CTRUE); // reset on
 	ResetCon(RESETINDEX_OF_SSP0_MODULE_nSSPRST, CTRUE); // reset on
 
-	pReg_GPIO[2]->GPIOxOUT &= ~(0x1<<27);
-	pReg_GPIO[2]->GPIOxOUTENB &= ~(0x1<<27);
+#if (CFG_WRITE_EN == 1)
+	pGPIOxRegC->GPIOxOUTENB     &= ~(0x1<<27);
+	pGPIOxRegC->GPIOxOUT        &= ~(0x1<<27);
 
-	*pGPIOxRegC &= ~0xFC400000;
-	*pGPIOxRegD &= ~0x00000003;
+	pGPIOxRegC->GPIOxALTFN[1]   &= ~0xFCC00000; // GPIO C[27, 29, 30, 31] ALT0
+#else
+	pGPIOxRegC->GPIOxALTFN[1]   &= ~0xFC000000; // GPIO C[29, 30, 31] ALT0
+#endif
+	pGPIOxRegD->GPIOxALTFN[0]   &= ~0x00000003; // GPIO D[0] ALT0
 }
 
 U32	SPI_EEPROMRead( U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U32 fcs )
@@ -205,11 +239,11 @@ U32	SPI_EEPROMRead( U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U
 
 //	printf("SPI Flash Address: 0x%08X\r\n", FlashBase );
 
-	pGPIOxReg->GPIOxOUT |= 0x40000000;	// gpio c 30 frm is gpio mode and output high first;
-	pGPIOxReg->GPIOxOUTENB |= 0x40000000;	// gpio c 30 frm is gpio mode and out mode;
-	pGPIOxReg->GPIOxALTFN[1] &=  ~(0x30000000);	// spi 0 gpio c 29 alt 1, 30 alt 0, 31 alt 1 // frm will use gpio mode
+	pGPIOxReg->GPIOxOUT         |=   0x40000000;    // gpio c 30 frm is gpio mode and output high first;
+	pGPIOxReg->GPIOxOUTENB      |=   0x40000000;    // gpio c 30 frm is gpio mode and out mode;
+	pGPIOxReg->GPIOxALTFN[1]    &= ~(0x30000000);   // spi 0 gpio c 29 alt 1, 30 alt 0, 31 alt 1 // frm will use gpio mode
 
-	pGPIOxReg->GPIOxOUT &= ~0x40000000;	// gpio c 30 frm is gpio mode and output low;
+	pGPIOxReg->GPIOxOUT         &= ~(0x40000000);   // gpio c 30 frm is gpio mode and output low;
 
 	pSSPSPIReg->SSPCR1 |= 0x1<<1;		// spi start (cs alreay low)
 
@@ -264,7 +298,8 @@ U32	SPI_EEPROMRead( U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U
 
 	return fcs;
 }
-#if 0
+
+#if 0   //(CFG_WRITE_EN == 1)
 void SPI_EEPROM_WriteEnable(void)
 {
 	pSSPSPIReg->SSPDR = SER_WREN;			// write enable command

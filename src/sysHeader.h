@@ -35,6 +35,7 @@
 #include <nx_intc.h>
 #include <nx_clkgen.h>
 #include <nx_ssp.h>
+#include <nx_uart.h>
 
 #include "secondboot.h"
 #include "printf.h"
@@ -46,14 +47,14 @@
 //------------------------------------------------------------------------------
 
 #if 0   //def NX_DEBUG
-#define SYSMSG(x, ...)  printf(x, ...)
+#define SYSMSG  printf
 #else
 #define SYSMSG(x, ...)
 #endif
 
 // Memory debug message
 #if 0
-#define MEMMSG(x, ...)  printf(x, ...)
+#define MEMMSG  printf
 #else
 #define MEMMSG(x, ...)
 #endif

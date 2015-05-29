@@ -23,13 +23,19 @@ SECTIONS
 
 	_end = .;
 
-	. = ALIGN(4);
-	.bss :
-	{
-		__bss_start = .;
+	__bss_start__ = .;
+	.bss_start (OVERLAY) : {
+		KEEP(*(.__bss_start));
+		__bss_base = .;
+	}
+	.bss __bss_base (OVERLAY) : {
 		*(.bss*)
 		. = ALIGN(4);
-		__bss_end__ = .;
+		__bss_limit = .;
 	}
+	.bss_end __bss_limit (OVERLAY) : {
+		KEEP(*(.__bss_end));
+	}
+	__bss_end__ = .;
 }
 

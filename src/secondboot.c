@@ -23,7 +23,11 @@
 
 
 #define CPU_BRINGUP_CHECK   (1)
+#if defined(CHIPID_NXP4330)
+#define AUTO_DETECT_EMA     (0)
+#else
 #define AUTO_DETECT_EMA     (1)
+#endif
 #define EMA_VALUE           (1)     // Manual setting - 1(001): 1.1V, 3(011): 1.0V
 
 extern void     __pllchange(volatile U32 data, volatile U32* addr, U32 delaycount);
@@ -34,8 +38,10 @@ extern void     DMC_Delay(int milisecond);
 extern void     flushICache(void);
 extern void     enableICache(CBOOL enable);
 
+#if (CONFIG_SUSPEND_RESUME == 1)
 extern void     enterSelfRefresh(void);
 extern void     exitSelfRefresh(void);
+#endif
 extern void     setAXIBus(void);
 
 extern CBOOL    iUSBBOOT(struct NX_SecondBootInfo * pTBI);
@@ -46,6 +52,7 @@ extern CBOOL    iNANDBOOTEC(struct NX_SecondBootInfo * pTBI);
 extern CBOOL    iSDXCFSBOOT(struct NX_SecondBootInfo * pTBI);
 extern void     initClock(void);
 extern void     initDDR3(U32);
+extern void     initPMIC(void);
 extern void     buildinfo(void);
 
 extern void     printClkInfo(void);
@@ -146,8 +153,9 @@ void setEMA(void)
 #else
     ema = EMA_VALUE;                            //; cortex-A9 L1 Cache EMA value (1: 1.1V, 3: 1.0V)
 #endif
-    flushICache();
+
     enableICache(CFALSE);
+    flushICache();
 
     // L2 Cache
     temp = ReadIO32( &pReg_Tieoff->TIEOFFREG[0] ) & ~(7<<22);
@@ -167,6 +175,7 @@ void setEMA(void)
 }
 
 //------------------------------------------------------------------------------
+#if (CONFIG_SUSPEND_RESUME == 1)
 static void dowakeup(void)
 {
     U32 fn, sign, phy, crc, len;
@@ -190,6 +199,7 @@ static void dowakeup(void)
     {
         U32 ret = __calc_crc((void*)phy, len);
 
+//        SYSMSG("CRC: 0x%08X FN: 0x%08X phy: 0x%08X len: 0x%08X ret: 0x%08X\r\n", crc, fn, phy, len, ret);
         printf("CRC: 0x%08X FN: 0x%08X phy: 0x%08X len: 0x%08X ret: 0x%08X\r\n", crc, fn, phy, len, ret);
         if (fn && (crc == ret))
         {
@@ -206,6 +216,7 @@ static void dowakeup(void)
 
     printf("It's COLD BOOT\r\n");
 }
+#endif  // #if (CONFIG_SUSPEND_RESUME == 1)
 
 CBOOL TurnOnCPUnonedelay( U32 CPUID )
 {
@@ -250,33 +261,11 @@ void SubCPUBoot( U32 CPUID )
 #endif
 
 
-struct NX_CLKPWR_RegisterSet * const clkpwr;
-void sleepMain( void )
-{
-//    WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC801 );       //; set PLL1 - 800Mhz
-    WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC802 );       //; set PLL1 - 400Mhz
-
-#if 0
-    __pllchange(clkpwr->PWRMODE | 0x1<<15, &clkpwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
-
-    {
-        volatile U32 delay = 0x100000;
-        while((clkpwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
-        if( clkpwr->PWRMODE & 0x1<<15 )
-        {
-//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
-            while(1);        // system reset code need.
-        }
-    }
-#endif
-
-    DebugInit();
-    enterSelfRefresh();
-}
-
-
+#if (CONFIG_SUSPEND_RESUME == 1)
 void vddPowerOff( void )
 {
+    ClearIO32( &pReg_ClkPwr->PWRCONT,           (0xFF   <<   8) );  //; Clear USE_WFI & USE_WFE bits for STOP mode.
+
     WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000001 );       //; alive power gate open
 
     WriteIO32( &pReg_Alive->VDDOFFCNTVALUERST,  0xFFFFFFFF );       //; clear delay counter, refrence rtc clock
@@ -288,12 +277,42 @@ void vddPowerOff( void )
     DMC_Delay(600);     // 600 : 110us, Delay for Pending Clear. When CPU clock is 400MHz, this value is minimum delay value.
 
     WriteIO32( &pReg_Alive->ALIVEGPIODETECTPENDREG, 0xFF );         //; all alive pend pending clear until power down.
-    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 );       //; alive power gate close
+//    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 );       //; alive power gate close
 
     while(1)
     {
+//        SetIO32  ( &pReg_ClkPwr->PWRMODE,       (0x1    <<   1) );  //; enter STOP mode.
+        WriteIO32( &pReg_ClkPwr->PWRMODE,       (0x1    <<   1) );  //; enter STOP mode.
         __asm__ __volatile__ ("wfi");                               //; now real entering point to stop mode.
     }                                                               //; this time, core power will off and so cpu will die.
+}
+#endif  // #if (CONFIG_SUSPEND_RESUME == 1)
+
+void sleepMain( void )
+{
+#if 0
+//    WriteIO32( &clkpwr->PLLSETREG[1],   0x100CC801 );       //; set PLL1 - 800Mhz
+    WriteIO32( &pReg_ClkPwr->PLLSETREG[1],   0x100CC802 );       //; set PLL1 - 400Mhz
+
+    __pllchange(pReg_ClkPwr->PWRMODE | 0x1<<15, &pReg_ClkPwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+
+    {
+        volatile U32 delay = 0x100000;
+        while((pReg_ClkPwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( pReg_ClkPwr->PWRMODE & 0x1<<15 )
+        {
+//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
+            while(1);        // system reset code need.
+        }
+    }
+#endif
+
+//    DebugInit();
+
+#if (CONFIG_SUSPEND_RESUME == 1)
+    enterSelfRefresh();
+    vddPowerOff();
+#endif
 }
 
 
@@ -303,7 +322,10 @@ void BootMain( U32 CPUID )
     struct NX_SecondBootInfo    TBI;
     struct NX_SecondBootInfo * pTBI = &TBI;    // third boot info
     CBOOL Result = CFALSE;
-    U32 sign, isResume = 0;
+#if (CONFIG_SUSPEND_RESUME == 1)
+    U32 sign;
+#endif
+    U32 isResume = 0;
     U32 temp;
 
     CPUID = CPUID;
@@ -383,7 +405,7 @@ void BootMain( U32 CPUID )
 
 //    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x1 );  // open alive power gate
 //    WriteIO32( &pReg_Alive->PMUNPWRUP,          0x3 );  // mpeg & 3d power down
-//    WriteIO32( &pReg_Alive->PMUNPWRUPPRE,       0x3 );  // mpeg & 3d  pre power down
+//    WriteIO32( &pReg_Alive->PMUNPWRUPPRE,       0x3 );  // mpeg & 3d pre power down
 //    WriteIO32( &pReg_Alive->PMUNISOLATE,        0x0 );  // mpeg & 3d power isolating
 
     initClock();
@@ -412,6 +434,11 @@ void BootMain( U32 CPUID )
     //--------------------------------------------------------------------------
     // get VID & PID for USBD
     //--------------------------------------------------------------------------
+#if defined(CHIPID_NXP4330)
+    g_USBD_VID = USBD_VID;
+    g_USBD_PID = USBD_PID;
+#else
+
     temp = ReadIO32(PHY_BASEADDR_ECID_MODULE + (3<<2));
     g_USBD_VID = (temp >> 16) & 0xFFFF;
     g_USBD_PID = (temp & 0xFFFF);
@@ -426,6 +453,7 @@ void BootMain( U32 CPUID )
         g_USBD_VID = 0x04E8;
         g_USBD_PID = 0x1234;
     }
+#endif
     SYSMSG("USBD VID = %04X, PID = %04X\r\n", g_USBD_VID, g_USBD_PID);
 
 
@@ -446,6 +474,7 @@ void BootMain( U32 CPUID )
             if(retry > 3)
             {
                 printf("maybe cpu %d is dead. -_-;\r\n", CPUNumber);
+                retry = 0;
                 CPUNumber++;
             }
             else
@@ -467,12 +496,22 @@ void BootMain( U32 CPUID )
     TurnOnCPUnonedelay(3);
 #endif
 
+#if (CONFIG_SUSPEND_RESUME == 1)
     WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
     sign = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
     if ((SUSPEND_SIGNATURE == sign) && ReadIO32(&pReg_Alive->WAKEUPSTATUS))
     {
         isResume = 1;
     }
+
+    //--------------------------------------------------------------------------
+    // Initialize PMIC device.
+    //--------------------------------------------------------------------------
+#if defined( INITPMIC_YES )
+    if (isResume == 0)
+        initPMIC();
+#endif
+
 
     initDDR3(isResume);
 
@@ -491,32 +530,50 @@ void BootMain( U32 CPUID )
         dowakeup();
     }
     WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 0);
+#else
+
+    //--------------------------------------------------------------------------
+    // Initialize PMIC device.
+    //--------------------------------------------------------------------------
+#if defined( INITPMIC_YES )
+    initPMIC();
+#endif
+
+    initDDR3(isResume);
+    SYSMSG( "DDR3 Init Done!\r\n" );
+
+    setAXIBus();
+#endif  // #if (CONFIG_SUSPEND_RESUME == 1)
 
     if (pSBI->SIGNATURE != HEADER_ID)
         printf( "2nd Boot Header is invalid, Please check it out!\r\n" );
 
-#if defined(CHIPID_LF3000)
-#ifdef usbload
+#if defined( LOAD_FROM_USB )
     printf( "Loading from usb...\r\n" );
     Result = iUSBBOOT(pTBI);            // for USB boot
-#elif   defined spiload
+#endif
+#if defined( LOAD_FROM_SPI )
     printf( "Loading from spi...\r\n" );
     Result = iSPIBOOT(pTBI);            // for SPI boot
-#elif   defined nandload
-    printf( "Loading from nand...\r\n" );
-    Result = iNANDBOOTEC(pTBI);         // for NAND boot
-#elif   defined sdmmcload
+#endif
+#if defined( LOAD_FROM_SDMMC )
     printf( "Loading from sdmmc...\r\n" );
     Result = iSDXCBOOT(pTBI);           // for SD boot
-#elif   defined sdfsload
+#endif
+#if defined( LOAD_FROM_SDFS )
     printf( "Loading from sd FATFS...\r\n" );
     Result = iSDXCFSBOOT(pTBI);         // for SDFS boot
-#elif   defined uartload
+#endif
+#if defined( LOAD_FROM_NAND )
+    printf( "Loading from nand...\r\n" );
+    Result = iNANDBOOTEC(pTBI);         // for NAND boot
+#endif
+#if defined( LOAD_FROM_UART )
     printf( "Loading from uart...\r\n" );
     Result = iUARTBOOT(pTBI);           // for UART boot
 #endif
-#elif defined(CHIPID_NXP4330)
 
+#if defined( LOAD_FROM_ALL ) && defined( CHIPID_S5P4418 )
     switch(pSBI->DBI.SPIBI.LoadDevice)
     {
     case BOOT_FROM_USB:
@@ -548,6 +605,9 @@ void BootMain( U32 CPUID )
     }
 #endif
 
+#if defined( LOAD_FROM_ALL ) && defined( CHIPID_NXP4330 )
+    #error "Do not support compile option!!!"
+#endif
 
 #if 0   // for memory test
     {

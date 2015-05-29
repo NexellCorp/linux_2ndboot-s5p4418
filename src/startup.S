@@ -17,6 +17,7 @@
 //                          2013-01-10      Hans
 ////////////////////////////////////////////////////////////////////////////////
 #include "nx_pyrope.h"
+#include "cfgBootDefine.h"
 
 
         .align 8
@@ -24,7 +25,7 @@
  * start and end of BSS
  */
 
-.globl __bss_start
+.globl __bss_start__
 .globl __bss_end__
 
 /*
@@ -51,7 +52,7 @@ Sleep:
         b       SystemSleep         //; 20
 
 BuildInfo:
-        .word   0x44180504          //; 24, , Chip name - 4418, Build num - v0.5.04
+        .word   0x44180600          //; 24, , Chip name - 4418, Build num - v0.6.00
 
 //        b       DynamicPllChange    //; for Samsung VD
 
@@ -87,7 +88,8 @@ Reset_Handler:
         ldr     r0, =0xc0010800                     //; alive base address
         mov     r1, #0x01
         str     r1, [r0, #0x00]                     //; open write gate
-        mov     r1, #0x3c0
+//        mov     r1, #0x3C0
+        mov     r1, #0x3FC
         str     r1, [r0, #0x9c]                     //; disable pad holding
 
 //;==================================================================
@@ -96,12 +98,14 @@ Reset_Handler:
         ldr     r0, =0xC0067000                     //; ECID Base address
         ldr     r1, [r0, #0x0C]                     //; Read ECID_03 register.
 
+#if 0
         mov     r2, #0
         ldr     r0, =g_SRAM_SIZE
         cmp     r1, r2                              //; if (r1 == 0) r1 = nxp4330 else r1 = s5p4418
         ldreq   r1, =(16*1024)                      //; Set 16KB (nxp4330)
         ldrne   r1, =(32*1024)                      //; Set 32KB (s5p4418)
         str     r1, [r0]
+#endif
 
 //;==================================================================
 //; Set SMP Start Address to Invalid
@@ -117,20 +121,19 @@ Reset_Handler:
 //; Clear SRAM
 //;==================================================================
 #if 0
-        ldr     sp, =BASEADDR_SRAM
-        add     r1, r1, #(INTERNAL_SRAM_SIZE/2)
-        add     r2, r1, #(INTERNAL_SRAM_SIZE/2)     // half of sram
-        mov     r3, #0
-clearsram:
-        str     r3, [r1], #4
-        str     r3, [r1], #4
-        str     r3, [r1], #4
-        str     r3, [r1], #4
-        cmp     r1, r2
-        bne     clearsram
+        ldr     r1, =__bss_start__                  // this is auto-relocated!
+
+        ldr     r0, =g_SRAM_SIZE
+        ldr     r3, [r0]                            // get SRAM size.
+        mov     r4, #0xFF000000
+        orr     r4, r4, #0x00FF0000
+        sub     r2, r3, #(4096)                     // sram_size - stack_size
+        orr     r2, r2, r4
 #else
-        ldr     r1, =__bss_start                    // this is auto-relocated!
+
+        ldr     r1, =__bss_start__                  // this is auto-relocated!
         ldr     r2, =__bss_end__                    // this is auto-relocated!
+#endif
 
         mov     r3, #0x00000000                     // prepare zero to clear BSS
 
@@ -139,7 +142,6 @@ clbss_l:
         strlo   r3, [r1]                            // clear 32-bit BSS word
         addlo   r1, r1, #4                          // move to next
         blo     clbss_l
-#endif
 
 //;==================================================================
 //; Setup stacks
@@ -164,19 +166,24 @@ Mainroot:
 //;==================================================================
 //; PLL Change
 //;==================================================================
-        .align 4                                    //; below instruction number is 4, 16bytes
+        .align 8                                    //; below instruction number is 8, 32bytes
 
 .global __pllchange
 __pllchange:                                        //; r0:data r1:pll address r2:delay count
-        str     r0, [r1]                            //; pll change start
+        mov     r3, #0x100                          //; for icache prefetch
 pllchangedelayloop:                                 //; this code will be already within i-cache. no bus transaction will make
-        subs    r2, r2, #1                          //; wait for pll change done
+        subs    r3, r3, #1
+        streq   r0, [r1]                            //; pll change start
+        moveqs  r3, r2                              //; real delay time set
+        cmpne   r3, #0x100
         bne     pllchangedelayloop
         bx      lr
+        nop
 
 //;==================================================================
 //; Self-Refresh Service
 //;==================================================================
+#if (CONFIG_SUSPEND_RESUME == 1)
 .global enterSelfRefresh                            //; this code is call linux kernel, so here is virtual memory space.
 .global sleepMain
 .global vddPowerOff
@@ -224,10 +231,14 @@ PhysicalStart:
         //; Set stack pointer
         ldr     sp, =BASEADDR_SRAM
         add     sp, sp, r4                          //; Add to internal sram size.
+//        add     sp, sp, #INTERNAL_SRAM_SIZE
 
         //; Goto sleepMain function.
         bl      sleepMain
-        bl      vddPowerOff
+#else
+
+SystemSleep:        //; r0:alive r1:drex
+#endif
         b       .                                   //; this time, core power will off and so cpu will die.
 
 
@@ -451,7 +462,8 @@ enableICache:
 //;==================================================================
 .global g_SRAM_SIZE
 g_SRAM_SIZE:
-        .long   (16*1024)                           //;4330 : 16KB, 4418 : 32KB
+//        .long   (16*1024)                           //;4330 : 16KB, 4418 : 32KB
+        .long   (32*1024)                           //;4330 : 16KB, 4418 : 32KB
 
 //;==================================================================
 //; End of startup.s

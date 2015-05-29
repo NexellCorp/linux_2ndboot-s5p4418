@@ -17,12 +17,29 @@
 //          2013-12-29  Hans
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "printf.h"
+#include "sysHeader.h"
 //------------------------------------------------------------------------------
-void buildinfo(void)
+CBOOL buildinfo(void)
 {
+    CBOOL   ret = CTRUE;
+    U32     *pNsih_BuildInfo = (U32 *)(0xFFFF0000 + 0x1F8);
+    U32     *p2nd_BuildInfo  = (U32 *)(0xFFFF0200 + 0x024);
+    U32     tmp;
+
+    // Read Build Infomation.
+    tmp = ReadIO32( p2nd_BuildInfo ) & 0xFFFF;
+
     printf( "\r\n" );
     printf( "--------------------------------------------------------------------------------\r\n" );
-    printf( " Second Boot by Nexell Co. : Ver0.5 - Built on %s %s\r\n", __DATE__, __TIME__ );
+    printf( " Second Boot by Nexell Co. : Ver%d.%d.%d - Built on %s %s\r\n", ((tmp >> 12) & 0xF), ((tmp >> 8) & 0xF), (tmp & 0xFF), __DATE__, __TIME__ );
     printf( "--------------------------------------------------------------------------------\r\n" );
+
+    tmp = ReadIO32( pNsih_BuildInfo ) & 0xFFFFFF00;
+    if ( (ReadIO32( p2nd_BuildInfo )  & 0xFFFFFF00) != tmp)
+    {
+        printf( " HSIN : Ver%d.%d.xx\r\n", ((tmp >> 12) & 0xF), ((tmp >> 8) & 0xF) );
+        ret = CFALSE;
+    }
+
+    return ret;
 }

@@ -1253,6 +1253,10 @@ U32	iSDXCBOOT( struct NX_SecondBootInfo * pTBI )
 	SDXCBOOTSTATUS * pSDXCBootStatus;
 	*(U32 *)0xFFFF7FFC = (U32)&lSDXCBootStatus;
 
+#if defined(CHIPID_NXP4330)
+	pSBI->DBI.SDMMCBI.PortNumber = 0;
+#endif
+
 //	pSBI->DBI.SDMMCBI.PortNumber = 1;
 //	pSBI->DEVICEADDR = 128 * 1024;
 

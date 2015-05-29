@@ -1,28 +1,34 @@
 ###########################################################################
 # Build Version info
 ###########################################################################
-VERINFO				= V054
+VERINFO				= V060
 
 ###########################################################################
 # Build Environment
 ###########################################################################
 DEBUG				= n
+BUILTINALL			= n
+#INITPMIC			= YES
+INITPMIC			= NO
 
-CHIPNAME			= LF3000
 #CHIPNAME			= NXP4330
+CHIPNAME			= S5P4418
 
-ifeq ($(CHIPNAME),LF3000)
-BOOTFROM			= usb
-#BOOTFROM			= spi
-#BOOTFROM			= sdmmc
-#BOOTFROM			= sdfs
-#BOOTFROM			= nand
+ifeq ($(BUILTINALL),n)
+#BOOTFROM			= USB
+#BOOTFROM			= SPI
+BOOTFROM			= SDMMC
+#BOOTFROM			= SDFS
+#BOOTFROM			= NAND
+#BOOTFROM			= UART
+else ifeq ($(BUILTINALL),y)
+BOOTFROM			= ALL
 endif
 
 #BOARD				= _pyxis
 #BOARD				= _lynx
 #BOARD				= _vtk
-BOARD				= _drone
+#BOARD				= _drone
 #BOARD				= _svt
 
 # cross-tool pre-header
@@ -31,16 +37,16 @@ CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-none-eabi-
 else
 CROSS_TOOL_TOP			=
-CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-cortex_a9-linux-gnueabi-
+CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-eabi-
 endif
 
 ###########################################################################
 # Top Names
 ###########################################################################
 PROJECT_NAME			= $(CHIPNAME)_2ndboot
-ifeq ($(CHIPNAME),LF3000)
+ifeq ($(BUILTINALL),n)
 TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)$(BOARD)_$(BOOTFROM)
-else ifeq ($(CHIPNAME),NXP4330)
+else ifeq ($(BUILTINALL),y)
 TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)
 endif
 LDS_NAME			= pyrope_2ndboot
@@ -52,9 +58,9 @@ LDS_NAME			= pyrope_2ndboot
 DIR_PROJECT_TOP			=
 
 DIR_OBJOUTPUT			= obj
-ifeq ($(CHIPNAME),LF3000)
+ifeq ($(BUILTINALL),n)
 DIR_TARGETOUTPUT		= build$(BOARD)_$(BOOTFROM)
-else ifeq ($(CHIPNAME),NXP4330)
+else ifeq ($(BUILTINALL),y)
 DIR_TARGETOUTPUT		= build$(BOARD)
 endif
 
@@ -69,6 +75,7 @@ LD 				= $(CROSS_TOOL)ld
 AS 				= $(CROSS_TOOL)as
 AR 				= $(CROSS_TOOL)ar
 MAKEBIN				= $(CROSS_TOOL)objcopy
+OBJCOPY				= $(CROSS_TOOL)objcopy
 RANLIB 				= $(CROSS_TOOL)ranlib
 
 GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
@@ -117,4 +124,6 @@ CFLAGS				+=	-g -Wall				\
 					-mcpu=$(CPU)				\
 					-mstructure-size-boundary=32		\
 					$(CODE_MAIN_INCLUDE)			\
-					-D__arm -D$(BOOTFROM)load -DCHIPID_$(CHIPNAME)
+					-D__arm -DLOAD_FROM_$(BOOTFROM)		\
+					-DINITPMIC_$(INITPMIC)			\
+					-DCHIPID_$(CHIPNAME)

@@ -21,41 +21,50 @@ LDFLAGS		=	-Bstatic							\
 			-Wl,--start-group						\
 			-Lsrc/$(DIR_OBJOUTPUT)						\
 			-Wl,--end-group							\
+			-Wl,--build-id=none						\
 			-nostdlib
 
 SYS_OBJS	=	startup.o secondboot.o				\
 			resetcon.o GPIO.o CRC32.o			\
-			clockinit.o debug.o printf.o util.o buildinfo.o
+			clockinit.o debug.o util.o buildinfo.o		\
+			printf.o
 SYS_OBJS	+=	MemoryInit.o
 #SYS_OBJS	+=	CRYPTO.o
 #SYS_OBJS	+=	nx_tieoff.o
 
-ifeq ($(CHIPNAME),LF3000)
-ifeq ($(BOOTFROM),usb)
-SYS_OBJS += iUSBBOOT.o
-endif
-ifeq ($(BOOTFROM),spi)
-SYS_OBJS += iSPIBOOT.o CRYPTO.o
-endif
-ifeq ($(BOOTFROM),sdmmc)
-SYS_OBJS += iSDHCBOOT.o
-endif
-ifeq ($(BOOTFROM),sdfs)
-SYS_OBJS += iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o
-endif
-ifeq ($(BOOTFROM),nand)
-SYS_OBJS += iNANDBOOTEC.o
-endif
-ifeq ($(BOOTFROM),uart)
-SYS_OBJS += iUARTBOOT.o
+ifeq ($(INITPMIC),YES)
+SYS_OBJS	+=	i2c_gpio.o pmic.o
 endif
 
-else ifeq ($(CHIPNAME),NXP4330)
-SYS_OBJS += iUSBBOOT.o iSPIBOOT.o iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o iNANDBOOTEC.o
-#SYS_OBJS += iUARTBOOT.o
+ifeq ($(BUILTINALL),n)
+ifeq ($(BOOTFROM),USB)
+SYS_OBJS	+=	iUSBBOOT.o
+endif
+ifeq ($(BOOTFROM),SPI)
+SYS_OBJS	+=	iSPIBOOT.o
+endif
+ifeq ($(BOOTFROM),SDMMC)
+SYS_OBJS	+=	iSDHCBOOT.o
+endif
+ifeq ($(BOOTFROM),SDFS)
+SYS_OBJS	+=	iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o
+endif
+ifeq ($(BOOTFROM),NAND)
+SYS_OBJS	+=	iNANDBOOTEC.o
+endif
+ifeq ($(BOOTFROM),UART)
+SYS_OBJS	+=	iUARTBOOT.o
 endif
 
-#SYS_OBJS += memtest_main.o test_list.o
+else ifeq ($(BUILTINALL),y)
+SYS_OBJS	+=	iUSBBOOT.o
+SYS_OBJS	+=	iSPIBOOT.o
+SYS_OBJS	+=	iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o
+SYS_OBJS	+=	iNANDBOOTEC.o
+#SYS_OBJS	+=	iUARTBOOT.o
+endif
+
+#SYS_OBJS	+=	memtest_main.o test_list.o
 
 
 SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
@@ -100,6 +109,14 @@ link:
 bin:
 	@echo [binary.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin]
 	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
+ifeq ($(OS),Windows_NT)
+	@if exist $(DIR_OBJOUTPUT)			\
+		@$(RM) $(DIR_OBJOUTPUT)\buildinfo.o
+else
+	@if	[ -e $(DIR_OBJOUTPUT) ]; then 		\
+		$(RM) $(DIR_OBJOUTPUT)/buildinfo.o;	\
+	fi;
+endif
 
 ###################################################################################################
 clean:

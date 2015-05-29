@@ -43,8 +43,10 @@
 //------------------------------------------------------------------------------
 //  System optional.
 //------------------------------------------------------------------------------
-#define CONFIG_MMU_ENABLE   (1)
-#define CONFIG_CACHE_L2X0   (0)
+#define CONFIG_SUSPEND_RESUME               (1)
+#define CONFIG_SET_MEM_TRANING_FROM_NSIH    (1)
+#define CONFIG_MMU_ENABLE                   (1)
+#define CONFIG_CACHE_L2X0                   (0)
 
 
 #endif  //	__CFG_BOOT_DEFINE_H__
