@@ -75,12 +75,62 @@ struct SDRAM_MR3
 	volatile U16 SBZ0		:13;    // 3 ~ 15
 };
 
+struct LPDDR3_MR0
+{
+	volatile U16 DAI		:1;     // 0 Device Auto-Initialization Status( 0: DAI still in progress)
+	volatile U16 _RFU0		:2;     // 1 ~ 2
+	volatile U16 RZQI		:2;     // 3 ~ 4 RZQ Information
+	volatile U16 _RFU1		:1;     // 5
+	volatile U16 WL			:1;     // 6
+	volatile U16 RL3		:1;     // 7
+	volatile U16 _reserved	:8;     // 8 ~ 15
+};
+struct LPDDR3_MR1
+{
+	volatile U16 BL		    :3;     // 0 ~ 2
+	volatile U16 _RFU0		:2;     // 3 ~ 4
+	volatile U16 WR		    :3;     // 5 ~ 7
+	volatile U16 _reserved	:8;     // 8 ~ 15
+};
+
+struct LPDDR3_MR2
+{
+	volatile U16 RL_WL		:4;     // 0 ~ 3
+	volatile U16 WRE		:1;     // 4
+	volatile U16 _RFU0		:1;     // 5
+	volatile U16 WL_SEL		:1;     // 6
+	volatile U16 WR_LVL		:1;     // 7
+	volatile U16 _reserved	:8;     // 8 ~ 15
+};
+
+struct LPDDR3_MR3
+{
+	volatile U16 DS			:4;     // 0 ~ 3
+	volatile U16 _RFU0		:4;     // 4 ~ 7
+	volatile U16 _reserved	:8;     // 8 ~ 15
+};
+
+struct LPDDR3_MR11
+{
+	volatile U16 DQ_ODT		:2;     // 0 ~ 1
+	volatile U16 PD_CON		:1;     // 2
+	volatile U16 _RFU0		:5;     // 3 ~ 7
+	volatile U16 _reserved	:8;     // 8 ~ 15
+};
+
 union SDRAM_MR
 {
-	struct SDRAM_MR0 MR0;
-	struct SDRAM_MR1 MR1;
-	struct SDRAM_MR2 MR2;
-	struct SDRAM_MR3 MR3;
+	struct SDRAM_MR0    MR0;
+	struct SDRAM_MR1    MR1;
+	struct SDRAM_MR2    MR2;
+	struct SDRAM_MR3    MR3;
+
+	struct LPDDR3_MR0   LP_MR0;
+	struct LPDDR3_MR1   LP_MR1;
+	struct LPDDR3_MR2   LP_MR2;
+	struct LPDDR3_MR3   LP_MR3;
+	struct LPDDR3_MR11  LP_MR11;
+
 	volatile U16 Reg;
 };
 

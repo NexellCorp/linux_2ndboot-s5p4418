@@ -39,6 +39,8 @@
 #define NXE2000_REG_DC5VOL              0x3A    /* MEM I/O  */
 
 #define I2C_ADDR_NXE2000   (0x64 >> 1)  // SVT & ASB
+#define I2C_ADDR_MP8845    (0x38 >> 1)  // SVT & ASB
+#define I2C_ADDR_AXP228    (0x68 >> 1)  // DroneL
 
 #define NXE2000_I2C_GPIO_GRP        3   // D group, NXE2000
 #define NXE2000_I2C_SCL             2
@@ -64,9 +66,8 @@ U8 nxe2000_get_dcdc_step(int want_vol)
         want_vol = NXE2000_DEF_DDCx_VOL_MAX;
     }
 
-    temp        = (want_vol - NXE2000_DEF_DDCx_VOL_MIN);
+    temp        = (want_vol - NXE2000_DEF_DDCx_VOL_MIN) + (NXE2000_DEF_DDCx_VOL_STEP - 1);
     vol_step    = (temp / NXE2000_DEF_DDCx_VOL_STEP);
-    temp        = (vol_step * NXE2000_DEF_DDCx_VOL_STEP) + NXE2000_DEF_DDCx_VOL_MIN;
 
     return (U8)(vol_step & 0xFF);
 }

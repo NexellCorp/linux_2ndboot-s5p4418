@@ -14,7 +14,7 @@
 //  Description     :
 //  Author          : Hans
 //  History         :
-//          2013-12-29  Hans
+//          2015-02-03  Hans
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "sysHeader.h"
@@ -37,7 +37,7 @@ CBOOL buildinfo(void)
     tmp = ReadIO32( pNsih_BuildInfo ) & 0xFFFFFF00;
     if ( (ReadIO32( p2nd_BuildInfo )  & 0xFFFFFF00) != tmp)
     {
-        printf( " HSIN : Ver%d.%d.xx\r\n", ((tmp >> 12) & 0xF), ((tmp >> 8) & 0xF) );
+        printf( " NSIH : Ver%d.%d.xx\r\n", ((tmp >> 12) & 0xF), ((tmp >> 8) & 0xF) );
         ret = CFALSE;
     }
 

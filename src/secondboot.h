@@ -100,6 +100,18 @@ struct NX_DDR3DEV_DRVDSInfo
     U8  _Reserved0;
 };
 
+struct NX_LPDDR3DEV_DRVDSInfo
+{
+    U8  MR3_DS      : 4;
+    U8  MR11_DQ_ODT : 2;
+    U8  MR11_PD_CON : 1;
+    U8  _Reserved0  : 1;
+
+    U8  _Reserved1;
+    U8  _Reserved2;
+    U8  _Reserved3;
+};
+
 struct NX_DDRPHY_DRVDSInfo
 {
     U8  DRVDS_Byte0;    // Data Slice 0
@@ -149,8 +161,8 @@ struct NX_DDRInitInfo
 #else
     U8  CWL;            // 0x90
     U8  CL;             // 0x91
-    U8  MR1_AL;         // 0x92
-    U8  MR0_WR;         // 0x93
+    U8  MR1_AL;         // 0x92, MR2_RLWL (LPDDR3)
+    U8  MR0_WR;         // 0x93, MR1_nWR (LPDDR3)
 #endif
 
     U32 READDELAY;      // 0x94
@@ -183,8 +195,13 @@ struct NX_SecondBootInfo
 
     struct NX_DDRInitInfo DII;      // 0x088 ~ 0x0AC
 
-    struct NX_DDR3DEV_DRVDSInfo DDR3_DSInfo;    // 0x0B0
-    struct NX_DDRPHY_DRVDSInfo  PHY_DSInfo;     // 0x0B4 ~ 0x0BC
+#if defined(MEM_TYPE_DDR3)
+    struct NX_DDR3DEV_DRVDSInfo     DDR3_DSInfo;    // 0x0B0
+#endif
+#if defined(MEM_TYPE_LPDDR23)
+    struct NX_LPDDR3DEV_DRVDSInfo   LPDDR3_DSInfo;  // 0x0B0
+#endif
+    struct NX_DDRPHY_DRVDSInfo      PHY_DSInfo;     // 0x0B4 ~ 0x0BC
 
     U16 LvlTr_Mode;                 // 0x0C0 ~ 0x0C1
     U16 FlyBy_Mode;                 // 0x0C2 ~ 0x0C3
@@ -196,8 +213,13 @@ struct NX_SecondBootInfo
 
     struct NX_DDRInitInfo DII;      // 0x098 ~ 0x0BC
 
-    struct NX_DDR3DEV_DRVDSInfo DDR3_DSInfo;    // 0x0C0
-    struct NX_DDRPHY_DRVDSInfo  PHY_DSInfo;     // 0x0C4 ~ 0x0CC
+#if defined(MEM_TYPE_DDR3)
+    struct NX_DDR3DEV_DRVDSInfo     DDR3_DSInfo;    // 0x0C0
+#endif
+#if defined(MEM_TYPE_LPDDR23)
+    struct NX_LPDDR3DEV_DRVDSInfo   LPDDR3_DSInfo;  // 0x0C0
+#endif
+    struct NX_DDRPHY_DRVDSInfo      PHY_DSInfo;     // 0x0C4 ~ 0x0CC
 
     U16 LvlTr_Mode;                 // 0x0D0 ~ 0x0D1
     U16 FlyBy_Mode;                 // 0x0D2 ~ 0x0D3

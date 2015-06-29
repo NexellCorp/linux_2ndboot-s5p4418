@@ -7,6 +7,10 @@ VERINFO				= V060
 # Build Environment
 ###########################################################################
 DEBUG				= n
+
+MEMTYPE				= DDR3
+#MEMTYPE				= LPDDR3
+
 BUILTINALL			= n
 #INITPMIC			= YES
 INITPMIC			= NO
@@ -43,11 +47,11 @@ endif
 ###########################################################################
 # Top Names
 ###########################################################################
-PROJECT_NAME			= $(CHIPNAME)_2ndboot
+PROJECT_NAME			= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
 ifeq ($(BUILTINALL),n)
-TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)$(BOARD)_$(BOOTFROM)
+TARGET_NAME			= $(PROJECT_NAME)$(BOARD)_$(BOOTFROM)
 else ifeq ($(BUILTINALL),y)
-TARGET_NAME			= $(PROJECT_NAME)_$(VERINFO)
+TARGET_NAME			= $(PROJECT_NAME)
 endif
 LDS_NAME			= pyrope_2ndboot
 
@@ -125,5 +129,6 @@ CFLAGS				+=	-g -Wall				\
 					-mstructure-size-boundary=32		\
 					$(CODE_MAIN_INCLUDE)			\
 					-D__arm -DLOAD_FROM_$(BOOTFROM)		\
+					-DMEMTYPE_$(MEMTYPE)			\
 					-DINITPMIC_$(INITPMIC)			\
 					-DCHIPID_$(CHIPNAME)

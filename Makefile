@@ -28,7 +28,15 @@ SYS_OBJS	=	startup.o secondboot.o				\
 			resetcon.o GPIO.o CRC32.o			\
 			clockinit.o debug.o util.o buildinfo.o		\
 			printf.o
-SYS_OBJS	+=	MemoryInit.o
+SYS_OBJS	+=	sysbus.o
+
+ifeq ($(MEMTYPE),DDR3)
+SYS_OBJS	+=	init_DDR3.o
+endif
+ifeq ($(MEMTYPE),LPDDR3)
+SYS_OBJS	+=	init_LPDDR3.o
+endif
+
 #SYS_OBJS	+=	CRYPTO.o
 #SYS_OBJS	+=	nx_tieoff.o
 

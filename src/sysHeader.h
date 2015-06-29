@@ -31,6 +31,7 @@
 #include <nx_clkpwr.h>
 #include <nx_gpio.h>
 #include <nx_alive.h>
+#include <nx_rtc.h>
 #include <nx_tieoff.h>
 #include <nx_intc.h>
 #include <nx_clkgen.h>
@@ -66,17 +67,18 @@
 
 #if defined(__SET_GLOBAL_VARIABLES)
 
-struct NX_SecondBootInfo                * const pSBI = (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
-struct NX_SecondBootInfo                * const pTBI = (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
-struct NX_GPIO_RegisterSet             (* pReg_GPIO)[1] = (struct NX_GPIO_RegisterSet (*)[])PHY_BASEADDR_GPIOA_MODULE;
-struct NX_ALIVE_RegisterSet             * pReg_Alive = (struct NX_ALIVE_RegisterSet *)PHY_BASEADDR_ALIVE_MODULE;
-struct NX_TIEOFF_RegisterSet            * pReg_Tieoff = (struct NX_TIEOFF_RegisterSet *)PHY_BASEADDR_TIEOFF_MODULE;
-struct NX_CLKPWR_RegisterSet            * pReg_ClkPwr = (struct NX_CLKPWR_RegisterSet *)PHY_BASEADDR_CLKPWR_MODULE;
-struct NX_CLKGEN_RegisterSet            * pReg_UartClkGen = (struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN22_MODULE;
-struct NX_UART_RegisterSet              * pReg_Uart = (struct NX_UART_RegisterSet *)PHY_BASEADDR_UART0_MODULE;
-struct NX_RSTCON_RegisterSet            * pReg_RstCon = (struct NX_RSTCON_RegisterSet *)PHY_BASEADDR_RSTCON_MODULE;
-struct NX_DREXSDRAM_RegisterSet         * pReg_Drex = (struct NX_DREXSDRAM_RegisterSet *)PHY_BASEADDR_DREX_MODULE_CH0_APB;
-struct NX_DDRPHY_RegisterSet            * pReg_DDRPHY = (struct NX_DDRPHY_RegisterSet *)PHY_BASEADDR_DREX_MODULE_CH1_APB;
+struct NX_SecondBootInfo                * const pSBI        = (struct NX_SecondBootInfo   * const)BASEADDR_SRAM;
+struct NX_SecondBootInfo                * const pTBI        = (struct NX_SecondBootInfo   * const)BASEADDR_SRAM;
+struct NX_GPIO_RegisterSet             (* pReg_GPIO)[1]     = (struct NX_GPIO_RegisterSet   (*)[])PHY_BASEADDR_GPIOA_MODULE;
+struct NX_ALIVE_RegisterSet             * pReg_Alive        = (struct NX_ALIVE_RegisterSet      *)PHY_BASEADDR_ALIVE_MODULE;
+struct NX_TIEOFF_RegisterSet            * pReg_Tieoff       = (struct NX_TIEOFF_RegisterSet     *)PHY_BASEADDR_TIEOFF_MODULE;
+struct NX_CLKPWR_RegisterSet            * pReg_ClkPwr       = (struct NX_CLKPWR_RegisterSet     *)PHY_BASEADDR_CLKPWR_MODULE;
+struct NX_CLKGEN_RegisterSet            * pReg_UartClkGen   = (struct NX_CLKGEN_RegisterSet     *)PHY_BASEADDR_CLKGEN22_MODULE;
+struct NX_UART_RegisterSet              * pReg_Uart         = (struct NX_UART_RegisterSet       *)PHY_BASEADDR_UART0_MODULE;
+struct NX_RSTCON_RegisterSet            * pReg_RstCon       = (struct NX_RSTCON_RegisterSet     *)PHY_BASEADDR_RSTCON_MODULE;
+struct NX_DREXSDRAM_RegisterSet         * pReg_Drex         = (struct NX_DREXSDRAM_RegisterSet  *)PHY_BASEADDR_DREX_MODULE_CH0_APB;
+struct NX_DDRPHY_RegisterSet            * pReg_DDRPHY       = (struct NX_DDRPHY_RegisterSet     *)PHY_BASEADDR_DREX_MODULE_CH1_APB;
+struct NX_RTC_RegisterSet               * pReg_RTC          = (struct NX_RTC_RegisterSet        *)PHY_BASEADDR_RTC_MODULE;
 
 U32 g_USBD_VID;
 U32 g_USBD_PID;
@@ -94,6 +96,8 @@ extern struct NX_UART_RegisterSet       * pReg_Uart;
 extern struct NX_RSTCON_RegisterSet     * pReg_RstCon;
 extern struct NX_DREXSDRAM_RegisterSet  * pReg_Drex;
 extern struct NX_DDRPHY_RegisterSet     * pReg_DDRPHY;
+extern struct NX_RTC_RegisterSet        * pReg_RTC;
+
 
 extern U32 g_USBD_VID;
 extern U32 g_USBD_PID;

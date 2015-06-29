@@ -9,12 +9,13 @@
 //*****************************************************************************
 
 //#define ENV_SYSTEM_SYNCMODE
-#define NX_BASE_REG_PA_RSTCON   (0xC0012000)
-#define NX_BASE_REG_PA_DREX     (0xC00E0000)
-#define NX_BASE_REG_PA_DDRPHY   (0xC00E1000)
-#define NX_PA_BASE_REG_PL301_DISP  (0xC005E000)         // Temp. PL301 Register
-#define NX_PA_BASE_REG_PL301_BOTT  (0xC0050000)         // Temp. PL301 Register
-#define NX_PA_BASE_REG_PL301_TOP   (0xC0052000)         // Temp. PL301 Register
+#define NX_BASE_REG_PA_RSTCON       (0xC0012000)
+#define NX_BASE_REG_PA_DREX         (0xC00E0000)
+#define NX_BASE_REG_PA_DDRPHY       (0xC00E1000)
+#if 0
+#define NX_PA_BASE_REG_PL301_DISP   (0xC005E000)        // Temp. PL301 Register
+#define NX_PA_BASE_REG_PL301_BOTT   (0xC0050000)        // Temp. PL301 Register
+#define NX_PA_BASE_REG_PL301_TOP    (0xC0052000)        // Temp. PL301 Register
 
 #define NX_PL301_QOS_TRDMARK_OFFSET     (0x400)
 #define NX_PL301_QOS_CTRL_OFFSET        (0x404)
@@ -35,6 +36,7 @@
 #define NX_BASE_REG_PL301_TOP_QOS_CTRL      (NX_PA_BASE_REG_PL301_TOP | NX_PL301_QOS_CTRL_OFFSET)
 #define NX_BASE_REG_PL301_TOP_AR            (NX_PA_BASE_REG_PL301_TOP | NX_PL301_AR_OFFSET)
 #define NX_BASE_REG_PL301_TOP_AW            (NX_PA_BASE_REG_PL301_TOP | NX_PL301_AW_OFFSET)
+#endif
 
 typedef struct {
     U32 QOSCONTROL;

@@ -42,7 +42,7 @@ extern void     enableICache(CBOOL enable);
 extern void     enterSelfRefresh(void);
 extern void     exitSelfRefresh(void);
 #endif
-extern void     setAXIBus(void);
+extern void     setBusConfig(void);
 
 extern CBOOL    iUSBBOOT(struct NX_SecondBootInfo * pTBI);
 extern CBOOL    iUARTBOOT(struct NX_SecondBootInfo * pTBI);
@@ -51,7 +51,13 @@ extern CBOOL    iSDXCBOOT(struct NX_SecondBootInfo * pTBI);
 extern CBOOL    iNANDBOOTEC(struct NX_SecondBootInfo * pTBI);
 extern CBOOL    iSDXCFSBOOT(struct NX_SecondBootInfo * pTBI);
 extern void     initClock(void);
-extern void     initDDR3(U32);
+#ifdef MEM_TYPE_DDR3
+extern void     init_DDR3(U32);
+#endif
+#ifdef MEM_TYPE_LPDDR23
+extern void     init_LPDDR3(U32);
+#endif
+
 extern void     initPMIC(void);
 extern void     buildinfo(void);
 
@@ -330,6 +336,33 @@ void BootMain( U32 CPUID )
 
     CPUID = CPUID;
 
+    DebugInit();
+
+#if (CONFIG_SUSPEND_RESUME == 1)
+    WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
+    sign = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
+    if ((SUSPEND_SIGNATURE == sign) && ReadIO32(&pReg_Alive->WAKEUPSTATUS))
+    {
+        isResume = 1;
+    }
+
+    //--------------------------------------------------------------------------
+    // Initialize PMIC device.
+    //--------------------------------------------------------------------------
+#if defined( INITPMIC_YES )
+    if (isResume == 0)
+        initPMIC();
+#endif
+#else
+
+    //--------------------------------------------------------------------------
+    // Initialize PMIC device.
+    //--------------------------------------------------------------------------
+#if defined( INITPMIC_YES )
+    initPMIC();
+#endif
+#endif  //#if (CONFIG_SUSPEND_RESUME == 1)
+
 #if 0
     regvalue  = *(volatile U32 *)PHY_BASEADDR_RSTCON_MODULE;
     regvalue |= 1UL<<RESETINDEX_OF_DISPLAYTOP_MODULE_i_Top_nRST;
@@ -497,23 +530,12 @@ void BootMain( U32 CPUID )
 #endif
 
 #if (CONFIG_SUSPEND_RESUME == 1)
-    WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
-    sign = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
-    if ((SUSPEND_SIGNATURE == sign) && ReadIO32(&pReg_Alive->WAKEUPSTATUS))
-    {
-        isResume = 1;
-    }
-
-    //--------------------------------------------------------------------------
-    // Initialize PMIC device.
-    //--------------------------------------------------------------------------
-#if defined( INITPMIC_YES )
-    if (isResume == 0)
-        initPMIC();
+#ifdef MEM_TYPE_DDR3
+    init_DDR3(isResume);
 #endif
-
-
-    initDDR3(isResume);
+#ifdef MEM_TYPE_LPDDR23
+    init_LPDDR3(isResume);
+#endif
 
     if (isResume)
     {
@@ -522,7 +544,7 @@ void BootMain( U32 CPUID )
 
     SYSMSG( "DDR3 Init Done!\r\n" );
 
-    setAXIBus();
+    setBusConfig();
 
     if (isResume)
     {
@@ -532,17 +554,16 @@ void BootMain( U32 CPUID )
     WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 0);
 #else
 
-    //--------------------------------------------------------------------------
-    // Initialize PMIC device.
-    //--------------------------------------------------------------------------
-#if defined( INITPMIC_YES )
-    initPMIC();
+#ifdef MEM_TYPE_DDR3
+    init_DDR3(isResume);
+#endif
+#ifdef MEM_TYPE_LPDDR23
+    init_LPDDR3(isResume);
 #endif
 
-    initDDR3(isResume);
     SYSMSG( "DDR3 Init Done!\r\n" );
 
-    setAXIBus();
+    setBusConfig();
 #endif  // #if (CONFIG_SUSPEND_RESUME == 1)
 
     if (pSBI->SIGNATURE != HEADER_ID)
