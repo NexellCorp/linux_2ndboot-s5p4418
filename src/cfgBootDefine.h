@@ -46,6 +46,7 @@
 //------------------------------------------------------------------------------
 //  System optional.
 //------------------------------------------------------------------------------
+#define CONFIG_BUS_RECONFIG                 (1)
 #define CONFIG_SUSPEND_RESUME               (1)
 #define CONFIG_SET_MEM_TRANING_FROM_NSIH    (1)
 #define CONFIG_MMU_ENABLE                   (0)

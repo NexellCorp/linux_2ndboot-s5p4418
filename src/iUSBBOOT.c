@@ -759,7 +759,7 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo * pTBI)
     pUSBBootStatus->speed = USB_HIGH;
     pUSBBootStatus->ep0_state = EP0_STATE_INIT;
 
-    printf("irom usb boot ready!\r\n");
+    printf("2ndboot usb boot ready!\r\n");
 
     pUSBBootStatus->bDownLoading = CTRUE;
     while (pUSBBootStatus->bDownLoading)

@@ -2179,9 +2179,9 @@ void init_DDR3(U32 isResume)
     WriteIO32( &pReg_DDRPHY->PHY_CON[12],   temp );
 
 #if (DDR_NEW_LEVELING_TRAINING == 0)
-    SetIO32( &pReg_DDRPHY->PHY_CON[2],      (0x1    <<  24) );              // rdlvl_gate_en=1
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[2],    (0x1    <<  24) );              // rdlvl_gate_en=1
 
-    SetIO32( &pReg_DDRPHY->PHY_CON[0],      (0x1    <<   8) );              // ctrl_shgate=1
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<   8) );              // ctrl_shgate=1
     ClearIO32( &pReg_DDRPHY->PHY_CON[1],    (0xF    <<  20) );              // ctrl_gateduradj=0
 
     WriteIO32( &pReg_Drex->RDLVL_CONFIG,    0x00000001 );                   // ctrl_rdlvl_data_en[1]=1, Gate Traning : Enable
@@ -2211,7 +2211,7 @@ void init_DDR3(U32 isResume)
 #if (DDR_WRITE_DQ_CALIB_EN == 1)
     DDR_Write_DQ_Calibration(isResume);
 #endif
-#else
+#else   // #if (CONFIG_SET_MEM_TRANING_FROM_NSIH == 0)
 
 //    if (pSBI->LvlTr_Mode & LVLTR_WR_LVL)
 //        DDR_Write_Leveling();
@@ -2252,11 +2252,11 @@ void init_DDR3(U32 isResume)
     }
 
     WriteIO32( &pReg_DDRPHY->PHY_CON[14],   0x00000000 );               // ctrl_pulld_dq[11:8]=0x0, ctrl_pulld_dqs[3:0]=0x0
-    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x3    << 13) );           // p0_cmd_en[14]=0, byte_rdlvl_en[13]=0
+    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x3    <<  13) );          // p0_cmd_en[14]=0, byte_rdlvl_en[13]=0
 #endif  // #if (DDR_NEW_LEVELING_TRAINING == 1)
 
-    SetIO32( &pReg_DDRPHY->PHY_CON[12],     (0x1    <<   5));           // ctrl_dll_on[5]=1
-    SetIO32( &pReg_DDRPHY->PHY_CON[2],      (0x1    <<  12));           // DLLDeskewEn[2]=1
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[12],   (0x1    <<   5) );          // ctrl_dll_on[5]=1
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[2],    (0x1    <<  12));           // DLLDeskewEn[2]=1
 
 #if defined(ARCH_NXP4330) || defined(ARCH_S5P4418)
     SetIO32  ( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24));           // ctrl_resync=1

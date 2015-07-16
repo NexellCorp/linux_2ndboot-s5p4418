@@ -20,6 +20,7 @@
 #define CFG_BUS_RECONFIG_DISPBUSSI          1
 
 
+#if (CONFIG_BUS_RECONFIG == 1)
 #if 1
 void setBusConfig(void)
 {
@@ -84,6 +85,16 @@ void setBusConfig(void)
  */
 #if (CFG_BUS_RECONFIG_ENB == 1)
 #include <mach/s5p4418_bus.h>
+
+const u8 g_DrexBRB_RD[2] = {
+        0x1,            // Port0
+        0xF             // Port1
+};
+
+const u8 g_DrexBRB_WR[2] = {
+        0x1,            // Port0
+        0xF             // Port1
+};
 
 const u16 g_DrexQoS[2] = {
         0x100,          // S0
@@ -154,7 +165,7 @@ void setBusConfig(void)
 {
 	u32 val;
 	u32 num_si, num_mi;
-	u32 i_slot;
+	u32 i_slot, temp;
 #if ((CFG_DREX_PORT0_QOS_ENB == 1) || (CFG_DREX_PORT1_QOS_ENB == 1))
     u32 drex_qos_bits = 0;
 #endif
@@ -166,7 +177,17 @@ void setBusConfig(void)
     drex_qos_bits  |= (1<<12) | (1<<8);
 #endif
 
+#if 0
     writel( 0xFFF1FFF1,     &pReg_Drex->BRBRSVCONFIG );
+#else
+
+    temp    = ( 0xFF00FF00
+            | ((g_DrexBRB_WR[1] & 0xF) <<   20)
+            | ((g_DrexBRB_WR[0] & 0xF) <<   16)
+            | ((g_DrexBRB_RD[1] & 0xF) <<    4)
+            | ((g_DrexBRB_RD[0] & 0xF) <<    0));
+    writel( temp,           &pReg_Drex->BRBRSVCONFIG );
+#endif
     writel( 0x00000033,     &pReg_Drex->BRBRSVCONTROL );
 
 #if ((CFG_DREX_PORT0_QOS_ENB == 1) || (CFG_DREX_PORT1_QOS_ENB == 1))
@@ -334,3 +355,4 @@ void setBusConfig(void)
 }
 #endif
 
+#endif  // #if (CONFIG_BUS_RECONFIG == 1)

@@ -15,7 +15,7 @@
 //				Hans 2014.01.13 Excel Generator
 //				Hans 2013.06.23 Create
 //------------------------------------------------------------------------------
-// Excel sheet version - 0.5.0
+// Excel sheet version - 0.6.0
 //------------------------------------------------------------------------------
 // This must be synchronized with SecondBoot.h
 //------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ FFFF0000	// 0x04C : Launch Address for 2ndboot.
 41000A26	// 0x0AC	/tFAW:40ns(tCK)	/tXSR:256ns(tCK)	/tXP:24ns(tCK)	/tCKE:5ns(tCK)
 
 // DDR3 device - Drive strength value.
-00020102	// 0x0B0	[23:16] MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011: RZQ/6, 100: RZQ/12, 101: RZQ/8, [15:0] MR1_ODS - 0: RZQ/6, 1 : RZQ/7, [7:0] MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
+00020102	// 0x0B0	[23:16] MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011: RZQ/6, 100: RZQ/12, 101: RZQ/8, [15:8] MR1_ODS - 0: RZQ/6, 1 : RZQ/7, [7:0] MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
 
 // DDR PHY Controller - Drive strength value.
 06060606	// 0x0B4	[31:24] Byte3, [23:16] Byte2, [15:8] Byte1, [7:0] Byte0 - 240ohm / (n + 1), n = (1 ~ 7)
@@ -179,7 +179,7 @@ FFFF0000	// 0x04C : Launch Address for 2ndboot.
 00000000	// 0x1EC
 00000000	// 0x1F0
 00000000	// 0x1F4
-44180500	// 0x1F8, BuildInfo
+44180600	// 0x1F8, BuildInfo
 
 //------------------------------------------------------------------------------
 // Signature

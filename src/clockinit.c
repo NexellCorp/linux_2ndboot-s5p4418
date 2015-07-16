@@ -1,6 +1,6 @@
 #include "sysHeader.h"
 
-#if (CFG_NSIH_EN == 0)
+#if 1   //(CFG_NSIH_EN == 0)
 
 // system controller
 //#define SYSPLLCH      *(volatile unsigned long *)(0xc0010268)
@@ -174,6 +174,7 @@
 #define PLL23_PMS_800MHZ_P      3
 #define PLL23_PMS_800MHZ_M      200
 #define PLL23_PMS_800MHZ_S      1
+#define PLL23_PMS_800MHZ_K      0
 
 #define PLL23_PMS_790MHZ_P      4
 #define PLL23_PMS_790MHZ_M      263
@@ -238,25 +239,50 @@
 #define PLL23_PMS_400MHZ_M      200
 #define PLL23_PMS_400MHZ_S      2
 
+#define PLL23_PMS_360MHZ_P      3
+#define PLL23_PMS_360MHZ_M      360
+#define PLL23_PMS_360MHZ_S      3
+
 #define PLL23_PMS_333MHZ_P      4
 #define PLL23_PMS_333MHZ_M      222
 #define PLL23_PMS_333MHZ_S      2
 
-#define PLL23_PMS_400MHZ_P      3
-#define PLL23_PMS_400MHZ_M      200
-#define PLL23_PMS_400MHZ_S      2
+#define PLL23_PMS_300MHZ_P      3
+#define PLL23_PMS_300MHZ_M      300
+#define PLL23_PMS_300MHZ_S      3
 
 #define PLL23_PMS_295MHZ_P      6
 #define PLL23_PMS_295MHZ_M      295
 #define PLL23_PMS_295MHZ_S      2
 
+#define PLL23_PMS_266MHZ_P      3
+#define PLL23_PMS_266MHZ_M      266
+#define PLL23_PMS_266MHZ_S      3
+
 #define PLL23_PMS_250MHZ_P      3
 #define PLL23_PMS_250MHZ_M      250
 #define PLL23_PMS_250MHZ_S      3
 
+#define PLL23_PMS_240MHZ_P      3
+#define PLL23_PMS_240MHZ_M      240
+#define PLL23_PMS_240MHZ_S      3
+
+#define PLL23_PMS_200MHZ_P      3
+#define PLL23_PMS_200MHZ_M      200
+#define PLL23_PMS_200MHZ_S      3
+
 #define PLL23_PMS_125MHZ_P      3
 #define PLL23_PMS_125MHZ_M      250
 #define PLL23_PMS_125MHZ_S      4
+
+#define PLL23_PMS_100MHZ_P      3
+#define PLL23_PMS_100MHZ_M      200
+#define PLL23_PMS_100MHZ_S      4
+
+#define PLL23_PMS_50MHZ_P       3
+#define PLL23_PMS_50MHZ_M       200
+#define PLL23_PMS_50MHZ_S       5
+#define PLL23_PMS_50MHZ_K       0
 
 #endif
 
@@ -324,6 +350,48 @@ U32 NX_CLKPWR_GetDivideValue(U32 Divider)
 #define _GET_PLL23(_MHz, _val) \
     _val = (U32)((1UL<<28)|(PLL23_PMS_##_MHz##MHZ_P<<PLL_P)|(PLL23_PMS_##_MHz##MHZ_M<<PLL_M)|(PLL23_PMS_##_MHz##MHZ_S<<PLL_S));
 
+#define _GET_PLL23K(_MHz, _val) \
+    _val = (U32)((PLL23_PMS_##_MHz##MHZ_K<<PLL_K)|0x0104);
+
+#if defined(MEM_TYPE_LPDDR23)
+void setMemPLL(int CAafter)
+{
+#if 1
+    U32 PLL_PMS, PLL23_K;
+
+    if (CAafter)
+    {
+#if (CFG_NSIH_EN == 0)
+        _GET_PLL23(800, PLL_PMS);
+        _GET_PLL23K(800, PLL23_K);
+#else
+        PLL_PMS = pSBI->PLL[3];
+        PLL23_K = pSBI->PLLSPREAD[1];
+#endif
+    }
+    else
+    {
+        _GET_PLL23(50, PLL_PMS);
+        _GET_PLL23K(50, PLL23_K);
+    }
+
+    clkpwr->PLLSETREG[3]        = (U32)((1UL<<28) | PLL_PMS);
+    clkpwr->PLLSETREG_SSCG[3]   = (U32)PLL23_K;
+#endif
+
+    __pllchange(clkpwr->PWRMODE | 0x1<<15, &clkpwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+    {
+        volatile U32 delay = 0x100000;
+        while((clkpwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( clkpwr->PWRMODE & 0x1<<15 )
+        {
+//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
+            while(1);        // system reset code need.
+        }
+    }
+}
+#endif  // #if defined(MEM_TYPE_LPDDR23)
+
 void initClock(void)
 {
 #if (CFG_NSIH_EN == 0)
@@ -335,7 +403,7 @@ void initClock(void)
     // pll change
 #if (CFG_NSIH_EN == 0)
     // PLL0 for memory
-    _GET_PLL01(500, PLL_PMS);
+    _GET_PLL01(400, PLL_PMS);
     clkpwr->PLLSETREG[0] = (U32)PLL_PMS;
 
     // PLL1 for CPU

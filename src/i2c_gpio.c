@@ -21,8 +21,8 @@
 
 #define I2C_GPIO_DEBUG	0
 
-#define dprintf printf
-//#define dprintf(x)
+//#define dprintf printf
+#define dprintf(x)
 
 #define STRETCHING_TIMEOUT		100
 #define I2C_DELAY_TIME			2

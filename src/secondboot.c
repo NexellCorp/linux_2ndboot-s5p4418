@@ -42,7 +42,10 @@ extern void     enableICache(CBOOL enable);
 extern void     enterSelfRefresh(void);
 extern void     exitSelfRefresh(void);
 #endif
+
+#if (CONFIG_BUS_RECONFIG == 1)
 extern void     setBusConfig(void);
+#endif
 
 extern CBOOL    iUSBBOOT(struct NX_SecondBootInfo * pTBI);
 extern CBOOL    iUARTBOOT(struct NX_SecondBootInfo * pTBI);
@@ -58,7 +61,9 @@ extern void     init_DDR3(U32);
 extern void     init_LPDDR3(U32);
 #endif
 
+#if defined( INITPMIC_YES )
 extern void     initPMIC(void);
+#endif
 extern void     buildinfo(void);
 
 extern void     printClkInfo(void);
@@ -544,7 +549,9 @@ void BootMain( U32 CPUID )
 
     SYSMSG( "DDR3 Init Done!\r\n" );
 
+#if (CONFIG_BUS_RECONFIG == 1)
     setBusConfig();
+#endif
 
     if (isResume)
     {
@@ -552,7 +559,7 @@ void BootMain( U32 CPUID )
         dowakeup();
     }
     WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 0);
-#else
+#else   // #if (CONFIG_SUSPEND_RESUME == 1)
 
 #ifdef MEM_TYPE_DDR3
     init_DDR3(isResume);
@@ -563,7 +570,9 @@ void BootMain( U32 CPUID )
 
     SYSMSG( "DDR3 Init Done!\r\n" );
 
+#if (CONFIG_BUS_RECONFIG == 1)
     setBusConfig();
+#endif
 #endif  // #if (CONFIG_SUSPEND_RESUME == 1)
 
     if (pSBI->SIGNATURE != HEADER_ID)

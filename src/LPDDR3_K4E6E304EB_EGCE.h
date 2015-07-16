@@ -14,7 +14,7 @@
 //#define MEM_CLK         DDR3_760
 #define MEM_CLK         DDR3_800
 
-#define _DDR_CS_NUM     1               // nCS Number : Tablet=1, VTK=2
+#define _DDR_CS_NUM     2               // nCS Number : Tablet=1, VTK=2
 #define _DDR_BUS_WIDTH  16              // 16bit, 8bit
 
 #define _DDR_ROW_NUM    14
@@ -23,7 +23,8 @@
 
 
 // Refer to Memory Datasheet
-#define cs_size         (0x40000000>>24)
+//#define cs_size         (0x40000000>>24)
+#define cs_size         (0x20000000>>24)
 
 #define chip_row        (_DDR_ROW_NUM-12)       // ROW address bit : 15bit : 3(Tabletx2), 16bit : 4(Tabletx4, Elcomtech)
 #define chip_col        (_DDR_COL_NUM-7)        // Column Address Bit. 2:9bit, 3:10bit, others:Reserved
@@ -61,15 +62,10 @@
 #if (MEM_CLK == DDR3_800)
 
 #define MR1_nWR         0xC
-#define MR2_RLWL        0xA
+#define MR2_RLWL        0xC
 
-#if 1
 #define tPZQ            0x008035
 #define tREFI           0x30C   // 3.9us
-#else
-#define tPZQ            0x00401B
-#define tREFI           0x618   // 7.8us
-#endif
 
 #define tRFC            0x34
 #define tRRD            0x4
@@ -83,9 +79,9 @@
 #define tRTP            0x3
 #define W2W_C2C         0x1
 #define R2R_C2C         0x1
-#define tDQSCK          0x3     // DDR3 : 0
-#define tWL             0x3
-#define tRL             0x6
+#define tDQSCK          0x5     // DDR3 : 0
+#define tWL             0x6
+#define tRL             0xC
 
 #define tFAW            0x14
 #define tXSR            0x38
@@ -93,8 +89,9 @@
 #define tCKE            0x3
 #define tMRD            0x6
 
-//#define tWLO            0x4     // Micron (20ns)
-#define tWLO            0x3     // Samsung (15ns)
+//#define tADR            0x4     // Micron (20ns)
+#define tADR            0x3     // Samsung (15ns)
+#define tWLO            (tADR)
 
 #endif  //#if (MEM_CLK == DDR3_800)
 
@@ -102,19 +99,16 @@
 #if (MEM_CLK == DDR3_666)
 
 #define MR1_nWR         0xA
-#define MR2_RLWL        0x8
+#define MR2_RLWL        0xA
 
-//#define tPZQ            0x4017
-#define tPZQ            0x8035
-
-#define tREFI           0x289        // 3.9us
-//#define tREFI           0x513        // 7.8us
+#define tPZQ            0x8014
+#define tREFI           0x28A        // 3.9us
 
 #define tRFC            0x2C
 #define tRRD            0x4
 #define tRP             0x7
 #define tRCD            0x6
-#define tRC             0x07
+#define tRC             0x15
 #define tRAS            0x0E
 
 #define tWTR            0x3
@@ -122,7 +116,7 @@
 #define tRTP            0x3
 #define W2W_C2C         0x1
 #define R2R_C2C         0x1
-#define tDQSCK          0x2        // DDR3 : 0
+#define tDQSCK          0x4        // DDR3 : 0
 #define tWL             0x6
 #define tRL             0xA
 
@@ -133,8 +127,9 @@
 #define tCKE            0x3
 #define tMRD            0x5
 
-//#define tWLO            0x4     // Micron (20ns)
-#define tWLO            0x3     // Samsung (15ns)
+//#define tADR            0x4     // Micron (20ns)
+#define tADR            0x3     // Samsung (15ns)
+#define tWLO            (tADR)
 
 #endif  //#if (MEM_CLK == DDR3_666)
 
@@ -142,21 +137,16 @@
 #if (MEM_CLK == DDR3_533)
 
 #define MR1_nWR         0x8
-#define MR2_RLWL        0x6
+#define MR2_RLWL        0x9
 
-#if 1
-#define tPZQ            0x8060
-#define tREFI           0x207        // 3.9us
-#else
-#define tPZQ            0x4020
-#define tREFI           0x40F        // 7.8us
-#endif
+#define tPZQ            0x8020
+#define tREFI           0x208        // 3.9us
 
 #define tRFC            0x23
 #define tRRD            0x3
 #define tRP             0x6
 #define tRCD            0x5
-#define tRC             0x05
+#define tRC             0x12
 #define tRAS            0x0C
 
 #define tWTR            0x2
@@ -164,19 +154,19 @@
 #define tRTP            0x2
 #define W2W_C2C         0x1
 #define R2R_C2C         0x1
-#define tDQSCK          0x2   // DDR3 : 0
-//#define tDQSCK          0x1 // DDR3 : 0
-#define tWL             0x4
-#define tRL             0x8
+#define tDQSCK          0x3   // DDR3 : 0
+#define tWL             0x5
+#define tRL             0x9
 
 #define tFAW            0x0E
 #define tXSR            0x026
 #define tXP             0x02
 #define tCKE            0x2
-#define tMRD            0x4
+#define tMRD            0x5
 
-//#define tWLO            0x3     // Micron (20ns)
-#define tWLO            0x2     // Samsung (15ns)
+//#define tADR            0x3     // Micron (20ns)
+#define tADR            0x3     // Samsung (15ns)
+#define tWLO            (tADR)
 
 #endif  //#if (MEM_CLK == DDR3_533)
 
