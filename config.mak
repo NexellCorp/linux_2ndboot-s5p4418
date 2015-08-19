@@ -1,7 +1,7 @@
 ###########################################################################
 # Build Version info
 ###########################################################################
-VERINFO				= V060
+VERINFO				= V061
 
 ###########################################################################
 # Build Environment
@@ -131,4 +131,5 @@ CFLAGS				+=	-g -Wall				\
 					-D__arm -DLOAD_FROM_$(BOOTFROM)		\
 					-DMEMTYPE_$(MEMTYPE)			\
 					-DINITPMIC_$(INITPMIC)			\
-					-DCHIPID_$(CHIPNAME)
+					-DCHIPID_$(CHIPNAME)			\
+					-D_2NDBOOT_MODE

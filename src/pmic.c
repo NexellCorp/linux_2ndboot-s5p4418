@@ -27,10 +27,21 @@
 #define NXE2000_DEF_DDCx_VOL_STEP       12500   /* UINT = 1uV, 12.5mV */
 
 #define NXE2000_DEF_DDC1_VOL            1300000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.3V */
-#define NXE2000_DEF_DDC2_VOL            1200000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.2V */
+#define NXE2000_DEF_DDC2_VOL            1100000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.2V */
 #define NXE2000_DEF_DDC3_VOL            3300000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 3.3V */
+#if defined( MEM_TYPE_DDR3 )
+#if 0
 #define NXE2000_DEF_DDC4_VOL            1500000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.65V */
 #define NXE2000_DEF_DDC5_VOL            1500000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.65V */
+#else	// DDR3L
+#define NXE2000_DEF_DDC4_VOL            1350000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.65V */
+#define NXE2000_DEF_DDC5_VOL            1350000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.65V */
+#endif
+#endif
+#if defined( MEM_TYPE_LPDDR23 )
+#define NXE2000_DEF_DDC4_VOL            1200000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.65V */
+#define NXE2000_DEF_DDC5_VOL            1200000 /* VAL(uV) = 0: 0.60 ~ 3.5V, Step 12.5 mV, default(OTP) = 1.65V */
+#endif
 
 #define NXE2000_REG_DC1VOL              0x36    /* ARM      */
 #define NXE2000_REG_DC2VOL              0x37    /* CORE     */
@@ -42,9 +53,21 @@
 #define I2C_ADDR_MP8845    (0x38 >> 1)  // SVT & ASB
 #define I2C_ADDR_AXP228    (0x68 >> 1)  // DroneL
 
+#define DRONE_PMIC_INIT
+//#define SVT_PMIC_INIT
+//#define ASB_PMIC_INIT
+
+#if defined( DRONE_PMIC_INIT )
+#define NXE2000_I2C_GPIO_GRP        4   // E group, NXE2000
+#define NXE2000_I2C_SCL             14
+#define NXE2000_I2C_SDA             15
+#endif
+
+#if defined( SVT_PMIC_INIT ) || defined( ASB_PMIC_INIT )
 #define NXE2000_I2C_GPIO_GRP        3   // D group, NXE2000
 #define NXE2000_I2C_SCL             2
 #define NXE2000_I2C_SDA             3
+#endif
 
 
 extern void  I2C_Init( U8 gpioGRP, U8 gpioSCL, U8 gpioSDA );
@@ -78,7 +101,7 @@ void initPMIC(void)
 
     I2C_Init(NXE2000_I2C_GPIO_GRP, NXE2000_I2C_SCL, NXE2000_I2C_SDA);   // CORE & NXE2000
 
-#if 0
+#if 1
     pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL);
     I2C_Write(I2C_ADDR_NXE2000, NXE2000_REG_DC1VOL, pData, 1);
 

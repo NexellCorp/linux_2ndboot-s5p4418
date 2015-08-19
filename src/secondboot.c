@@ -30,7 +30,6 @@
 #endif
 #define EMA_VALUE           (1)     // Manual setting - 1(001): 1.1V, 3(011): 1.0V
 
-extern void     __pllchange(volatile U32 data, volatile U32* addr, U32 delaycount);
 extern U32      iget_fcs(U32 fcs, U32 data);
 extern U32      __calc_crc(void *addr, int len);
 extern void     DMC_Delay(int milisecond);
@@ -69,6 +68,11 @@ extern void     buildinfo(void);
 extern void     printClkInfo(void);
 
 extern void     ResetCon(U32 devicenum, CBOOL en);
+
+extern U32  g_GateCycle;
+extern U32  g_GateCode;
+extern U32  g_RDvwmc;
+extern U32  g_WRvwmc;
 
 //------------------------------------------------------------------------------
 #if (AUTO_DETECT_EMA == 1)
@@ -279,6 +283,20 @@ void vddPowerOff( void )
 
     WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000001 );       //; alive power gate open
 
+    //----------------------------------
+    // Save leveling & training values.
+#if 1
+    WriteIO32(&pReg_Alive->ALIVESCRATCHRST5,    0xFFFFFFFF);        // clear - ctrl_shiftc
+    WriteIO32(&pReg_Alive->ALIVESCRATCHRST6,    0xFFFFFFFF);        // clear - ctrl_offsetC
+    WriteIO32(&pReg_Alive->ALIVESCRATCHRST7,    0xFFFFFFFF);        // clear - ctrl_offsetr
+    WriteIO32(&pReg_Alive->ALIVESCRATCHRST8,    0xFFFFFFFF);        // clear - ctrl_offsetw
+
+    WriteIO32(&pReg_Alive->ALIVESCRATCHSET5,    g_GateCycle);       // store - ctrl_shiftc
+    WriteIO32(&pReg_Alive->ALIVESCRATCHSET6,    g_GateCode);        // store - ctrl_offsetc
+    WriteIO32(&pReg_Alive->ALIVESCRATCHSET7,    g_RDvwmc);          // store - ctrl_offsetr
+    WriteIO32(&pReg_Alive->ALIVESCRATCHSET8,    g_WRvwmc);          // store - ctrl_offsetw
+#endif
+
     WriteIO32( &pReg_Alive->VDDOFFCNTVALUERST,  0xFFFFFFFF );       //; clear delay counter, refrence rtc clock
     WriteIO32( &pReg_Alive->VDDOFFCNTVALUESET,  0x00000001 );       //; set minimum delay time for VDDPWRON pin. 1 cycle per 32.768Kh (about 30us)
 
@@ -467,32 +485,8 @@ void BootMain( U32 CPUID )
     //--------------------------------------------------------------------------
     // print clock information
     //--------------------------------------------------------------------------
-    printClkInfo();
+//    printClkInfo();
 
-    //--------------------------------------------------------------------------
-    // get VID & PID for USBD
-    //--------------------------------------------------------------------------
-#if defined(CHIPID_NXP4330)
-    g_USBD_VID = USBD_VID;
-    g_USBD_PID = USBD_PID;
-#else
-
-    temp = ReadIO32(PHY_BASEADDR_ECID_MODULE + (3<<2));
-    g_USBD_VID = (temp >> 16) & 0xFFFF;
-    g_USBD_PID = (temp & 0xFFFF);
-
-    if ((g_USBD_VID == 0) || (g_USBD_PID == 0))
-    {
-        g_USBD_VID = USBD_VID;
-        g_USBD_PID = USBD_PID;
-    }
-    else
-    {
-        g_USBD_VID = 0x04E8;
-        g_USBD_PID = 0x1234;
-    }
-#endif
-    SYSMSG("USBD VID = %04X, PID = %04X\r\n", g_USBD_VID, g_USBD_PID);
 
 
 #if (CPU_BRINGUP_CHECK == 1)

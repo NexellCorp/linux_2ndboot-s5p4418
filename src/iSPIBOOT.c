@@ -61,6 +61,10 @@ extern void DMC_Delay(int milisecond);
 extern void ResetCon(U32 devicenum, CBOOL en);
 extern void GPIOSetAltFunction(U32 AltFunc);
 
+
+U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
+
+
 #if 1
 typedef struct {
     U32 nPllNum;
@@ -75,7 +79,7 @@ CBOOL   NX_SPI_GetClkParam( NX_CLKINFO_SPI *pClkInfo )
     U32 nRetry = 1, nTemp = 0;
     CBOOL   fRet = CFALSE;
 
-    srcFreq = NX_CLKPWR_GetPLLFreq(pClkInfo->nPllNum);
+    srcFreq = NX_CLKPWR_GetPLLFrequency(pClkInfo->nPllNum);
 
 retry_getparam:
     for (pClkInfo->nClkDiv = 1; ; pClkInfo->nClkDiv ++)

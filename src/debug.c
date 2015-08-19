@@ -16,6 +16,8 @@
 //	History		:
 //
 //------------------------------------------------------------------------------
+#include "sysHeader.h"
+
 #include "cfgFreqDefine.h"
 
 #include <nx_pyrope.h>
@@ -37,8 +39,9 @@ extern U32 getquotient(int dividend, int divisor);
 extern U32 getremainder(int dividend, int divisor);
 void ResetCon(U32 devicenum, CBOOL en);
 void GPIOSetAltFunction(U32 AltFunc);
-U32 NX_CLKPWR_GetPLLFreq(U32 PllNumber);
+U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
 
+#if 0
 U32 UARTBASEADDR[6] =
 {
 	PHY_BASEADDR_UART0_MODULE,
@@ -81,17 +84,13 @@ U32 GPIOALTNUM[12] =
 	PADINDEX_OF_pl01115_Uart_nodma2_UARTRXD,
 	PADINDEX_OF_pl01115_Uart_nodma2_UARTTXD,
 };
-#if DIRECT_IO
-extern struct NX_GPIO_RegisterSet (* pReg_GPIO)[1];
 #endif
-extern struct NX_CLKGEN_RegisterSet * pReg_UartClkGen;
-extern struct NX_UART_RegisterSet   * pReg_Uart;
-extern struct NX_TIEOFF_RegisterSet * pReg_Tieoff;
+
 //------------------------------------------------------------------------------
 
 CBOOL DebugInit( void )
 {
-	U32 SOURCE_CLOCK = NX_CLKPWR_GetPLLFreq(NX_CLKSRC_UART);
+	U32 SOURCE_CLOCK = NX_CLKPWR_GetPLLFrequency(NX_CLKSRC_UART);
 
 #if DIRECT_IO
 	register U32 *pGPIOxReg = (U32 *)&pReg_GPIO[(PADINDEX_OF_UART0_UARTRXD>>8)&0x7]->GPIOxALTFN[(PADINDEX_OF_UART0_UARTRXD>>7)&0x1];
@@ -127,6 +126,7 @@ CBOOL DebugInit( void )
 	return CTRUE;
 }
 
+#if 0
 void TestUartInit(U32 port)
 {
 
@@ -144,7 +144,7 @@ void TestUartInit(U32 port)
 	}
 
 }
-
+#endif
 void	DebugPutch( S8 ch )
 {
 	const U16 TX_FIFO_FULL	= 1<<5;
@@ -163,7 +163,7 @@ CBOOL	DebugIsBusy(void)
 	const U16 UART_TX_BUSY	= 1<<3;
 	return (CBOOL)( pReg_Uart->FR & UART_TX_BUSY );
 }
-
+#if 0
 S8	DebugGetch( void )
 {
 	const U16 RX_FIFO_EMPTY	= 1<<4;
@@ -223,7 +223,7 @@ S32		DebugGetString( S8* const pStringBuffer )
 
 	return iSize;
 }
-
+#endif
 #if 0
 void	DebugPrint( const S8* const FormatString, ... )
 {

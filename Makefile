@@ -28,7 +28,7 @@ SYS_OBJS	=	startup.o secondboot.o				\
 			resetcon.o GPIO.o CRC32.o			\
 			clockinit.o debug.o util.o buildinfo.o		\
 			printf.o
-SYS_OBJS	+=	sysbus.o
+SYS_OBJS	+=	sysbus.o armv7_libs.o
 
 ifeq ($(MEMTYPE),DDR3)
 SYS_OBJS	+=	init_DDR3.o

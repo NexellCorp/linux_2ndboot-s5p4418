@@ -38,8 +38,8 @@
 #define DDR_WRITE_DQ_CALIB_EN           (1)
 
 #define DDR_GATE_LVL_COMPENSATION_EN    (0)     // Do not use. for Test.
-#define DDR_READ_DQ_COMPENSATION_EN     (1)
-#define DDR_WRITE_DQ_COMPENSATION_EN    (1)
+#define DDR_READ_DQ_COMPENSATION_EN     (0)
+#define DDR_WRITE_DQ_COMPENSATION_EN    (0)
 
 
 #define DDR_RESET_GATE_LVL              (1)
@@ -47,7 +47,13 @@
 #define DDR_RESET_WRITE_DQ              (1)
 
 #define DDR_RESET_QOS1                  (1)     // Release version is '1'
+
+#define DDR_READ_DQ_MARGIN_VIEW         (0)
+#define DDR_WRITE_DQ_MARGIN_VIEW        (0)
 #endif  // #if defined(CHIPID_S5P4418)
+
+
+#define CFG_ODT_ENB                     (1)
 
 #if (CFG_NSIH_EN == 0)
 #include "DDR3_K4B8G1646B_MCK0.h"
@@ -56,11 +62,11 @@
 #define nop() __asm__ __volatile__("mov\tr0,r0\t@ nop\n\t");
 
 
-static U32  g_DDRLock;
-static U32  g_GateCycle;
-static U32  g_GateCode;
-static U32  g_RDvwmc;
-static U32  g_WRvwmc;
+U32 g_DDRLock;
+U32 g_GateCycle;
+U32 g_GateCode;
+U32 g_RDvwmc;
+U32 g_WRvwmc;
 
 
 inline void DMC_Delay(int milisecond)
@@ -651,9 +657,6 @@ CBOOL DDR_Gate_Leveling(U32 isResume)
 
     MEMMSG("\r\n########## Gate Leveling - Start ##########\r\n");
 
-    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]=0. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-//    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]= 1. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-
     SetIO32  ( &pReg_DDRPHY->PHY_CON[14],   (0xF    <<  0) );               // ctrl_pulld_dqs[3:0] = 0
     SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    << 13) );               // byte_rdlvl_en[13]=1
 
@@ -867,11 +870,6 @@ gate_err_ret:
 #endif  // #if defined(MEM_TYPE_DDR3)
     }
 
-    ClearIO32( &pReg_DDRPHY->PHY_CON[14],   (0xF    <<   0) );              // ctrl_pulld_dqs[3:0]=0
-
-    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<   5) );              // ctrl_read_disable[5]= 1. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-//    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<   5) );              // ctrl_read_disable[5]=0. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-
     MEMMSG("\r\n########## Gate Leveling - End ##########\r\n");
 
     return ret;
@@ -888,6 +886,12 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
 #if (DDR_RESET_READ_DQ == 1)
     U32     lock_div4;
     U32     i;
+#if (DDR_READ_DQ_MARGIN_VIEW == 1)
+    U32     RDvwml = 0;
+    U32     RDvwmr = 0;
+    U8      rlvl_vwml[4];
+    U8      rlvl_vwmr[4];
+#endif
     U8      rlvl_vwmc[4];
     int     offsetr[4];
 #endif
@@ -969,9 +973,9 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
 #endif
 #endif  // #if defined(MEM_TYPE_LPDDR23)
 
-    SetIO32  ( &pReg_DDRPHY->PHY_CON[2],    (0x1    << 25) );           // rdlvl_en[25]=1
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[2],    (0x1    <<  25) );              // rdlvl_en[25]=1
 
-    WriteIO32( &pReg_Drex->RDLVL_CONFIG,    (0x1    <<  1) );           // ctrl_rdlvl_data_en[1]=1 : Starting READ leveling
+    WriteIO32( &pReg_Drex->RDLVL_CONFIG,    (0x1    <<   1) );              // ctrl_rdlvl_data_en[1]=1 : Starting READ leveling
 
     if (isResume)
     {
@@ -1024,12 +1028,27 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
         //------------------------------------------------------------------------------------------------------------------------
         WriteIO32( &pReg_DDRPHY->PHY_CON[5],    RD_VWMC);
         g_RDvwmc = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
+
+#if (DDR_READ_DQ_MARGIN_VIEW == 1)
+        WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_LEFT);
+        RDvwml  = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
+
+        WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_RIGHT);
+        RDvwmr  = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
+
+        MEMMSG("RDvwml 0x%08x, RDvwmr 0x%08x, RDvwmc 0x%08x\r\n",
+            RDvwml, RDvwmr, g_RDvwmc);
+#endif
         //------------------------------------------------------------------------------------------------------------------------
     }
 
 #if (DDR_RESET_READ_DQ == 1)
     for (i = 0; i < 4; i++)
     {
+#if (DDR_READ_DQ_MARGIN_VIEW == 1)
+        rlvl_vwml[i]   = ((RDvwml >> (8*i)) & 0xFF);
+        rlvl_vwmr[i]   = ((RDvwmr >> (8*i)) & 0xFF);
+#endif
         rlvl_vwmc[i]   = ((g_RDvwmc >> (8*i)) & 0xFF);
     }
 
@@ -1046,6 +1065,14 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
             offsetr[i] |= 0x80;
         }
     }
+
+#if (DDR_READ_DQ_MARGIN_VIEW == 1)
+    for (i = 0; i < 4; i++)
+    {
+        U32 range = rlvl_vwmr[i] - rlvl_vwml[i];
+        printf("RD DQ%d = %d ~ %d ~ %d, %d\r\n", i, rlvl_vwml[i], rlvl_vwmc[i], rlvl_vwmr[i], range);
+    }
+#endif
 
 #if (DDR_READ_DQ_COMPENSATION_EN == 1)
 {
@@ -1115,7 +1142,6 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
 
     //*** Resync
     //*** Update READ SDLL Code (ctrl_offsetr) : Make "ctrl_resync" HIGH and LOW
-    ClearIO32( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );
     SetIO32  ( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );      // ctrl_resync[24]=0x1 (HIGH)
     ClearIO32( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );      // ctrl_resync[24]=0x0 (LOW)
 #endif  // #if (DDR_RESET_READ_DQ == 1)
@@ -1174,12 +1200,20 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
     volatile U32 cal_count = 0;
     U32     lock_div4;
     U32     i;
+#if (DDR_WRITE_DQ_MARGIN_VIEW == 1)
+    U32     WRvwml = 0;
+    U32     WRvwmr = 0;
+    U8      wlvl_vwml[4];
+    U8      wlvl_vwmr[4];
+#endif
     U8      wlvl_vwmc[4];
     int     offsetw[4];
     U32     temp;
     CBOOL   ret = CTRUE;
 
     MEMMSG("\r\n########## Write DQ Calibration - Start ##########\r\n");
+
+    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]=0. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
 
 
 #if 1
@@ -1221,10 +1255,6 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
     WriteIO32( &pReg_DDRPHY->PHY_CON[1],        temp );
 #endif
 #if defined(MEM_TYPE_LPDDR23)
-#if (DDR_CA_SWAP_MODE == 1)
-    WriteIO32( &pReg_DDRPHY->PHY_CON[22+1],     0x00000204 );       // lpddr2_addr[19:0] : Set swap pattern for write training.
-#endif
-
     temp  = ReadIO32( &pReg_DDRPHY->PHY_CON[1] ) & 0xFFFF0000;
     if (ReadIO32( &pReg_DDRPHY->PHY_CON[0] ) & (0x1 << 13) )
         temp |= 0x0001;
@@ -1295,12 +1325,27 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
     //    WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_CENTER);
         WriteIO32( &pReg_DDRPHY->PHY_CON[5],    WR_VWMC);
         g_WRvwmc = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
+
+#if (DDR_WRITE_DQ_MARGIN_VIEW == 1)
+        WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_LEFT);
+        WRvwml  = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
+
+        WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_RIGHT);
+        WRvwmr  = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
+
+        MEMMSG("WRvwml 0x%08x, WRvwmr 0x%08x, WRvwmc 0x%08x\r\n",
+            WRvwml, WRvwmr, g_WRvwmc);
+#endif
         //------------------------------------------------------------------------------------------------------------------------
     }
 
 #if (DDR_RESET_WRITE_DQ == 1)
     for (i = 0; i < 4; i++)
     {
+#if (DDR_WRITE_DQ_MARGIN_VIEW == 1)
+        wlvl_vwml[i]   = ((WRvwml >> (8*i)) & 0xFF);
+        wlvl_vwmr[i]   = ((WRvwmr >> (8*i)) & 0xFF);
+#endif
         wlvl_vwmc[i]   = ((g_WRvwmc >> (8*i)) & 0xFF);
     }
 
@@ -1317,6 +1362,14 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
             offsetw[i] |= 0x80;
         }
     }
+
+#if (DDR_WRITE_DQ_MARGIN_VIEW == 1)
+    for (i = 0; i < 4; i++)
+    {
+        U32 range = wlvl_vwmr[i] - wlvl_vwml[i];
+        printf("WR DQ%d = %d ~ %d ~ %d, %d\r\n", i, wlvl_vwml[i], wlvl_vwmc[i], wlvl_vwmr[i], range);
+    }
+#endif
 
 #if (DDR_WRITE_DQ_COMPENSATION_EN == 1)
 {
@@ -1387,9 +1440,8 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
 
     //*** Resync
     //*** Update WRITE SDLL Code (ctrl_offsetr) : Make "ctrl_resync" HIGH and LOW
-    ClearIO32( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );
-    SetIO32  ( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );          // ctrl_resync[24]=0x1 (HIGH)
-    ClearIO32( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );          // ctrl_resync[24]=0x0 (LOW)
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );              // ctrl_resync[24]=0x1 (HIGH)
+    ClearIO32( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );              // ctrl_resync[24]=0x0 (LOW)
 #endif  // #if (DDR_RESET_WRITE_DQ == 1)
 
 wr_err_ret:
@@ -1417,17 +1469,26 @@ void init_DDR3(U32 isResume)
     U32 temp;
 
 
+    MR0.Reg = 0;
+    MR1.Reg = 0;
+    MR2.Reg = 0;
+    MR3.Reg = 0;
+
     MEMMSG("\r\nDDR3 POR Init Start\r\n");
 
     // Step 1. reset (Min : 10ns, Typ : 200us)
-    ClearIO32( NX_BASE_REG_PA_RSTCON, (0x7 << 26) );
-    DMC_Delay(0x1000);                              // wait 300ms
-    SetIO32  ( NX_BASE_REG_PA_RSTCON, (0x7 << 26) );
-    DMC_Delay(0x1000);                              // wait 300ms
-    ClearIO32( NX_BASE_REG_PA_RSTCON, (0x7 << 26) );
-    DMC_Delay(0x1000);                              // wait 300ms
-    SetIO32  ( NX_BASE_REG_PA_RSTCON, (0x7 << 26) );
-    DMC_Delay(0x10000);                             // wait 300ms
+    ClearIO32( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
+    ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x1000);                                          // wait 300ms
+    SetIO32  ( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
+    SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x1000);                                          // wait 300ms
+    ClearIO32( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
+    ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x1000);                                          // wait 300ms
+    SetIO32  ( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
+    SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x10000);                                        // wait 300ms
 
 //    MEMMSG("PHY Version: %X\r\n", ReadIO32(&pReg_DDRPHY->VERSION_INFO));
 
@@ -1664,8 +1725,8 @@ void init_DDR3(U32 isResume)
         (0x1    <<   9) |           // [    9] ctrl_dfdqs. 0:Single-ended DQS, 1:Differential DQS
 //        (0x1    <<   8) |           // [    8] ctrl_shgate. 0:Gate signal length=burst length/2+N, 1:Gate signal length=burst length/2-1
         (0x0    <<   7) |           // [    7] ctrl_ckdis. 0:Clock output Enable, 1:Disable
-        (0x1    <<   6) |           // [    6] ctrl_atgate.
-        (0x1    <<   5) |           // [    5] ctrl_read_disable. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
+//        (0x1    <<   6) |           // [    6] ctrl_atgate.
+//        (0x1    <<   5) |           // [    5] ctrl_read_disable. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
         (0x0    <<   4) |           // [    4] ctrl_cmosrcv.
         (0x0    <<   3) |           // [    3] ctrl_read_width.
         (0x0    <<   0));           // [ 2: 0] ctrl_fnc_fb. 000:Normal operation.
@@ -1776,14 +1837,14 @@ void init_DDR3(U32 isResume)
     /* ZQ Calibration */
 #if 0
     WriteIO32( &pReg_DDRPHY->PHY_CON[39+1],         // 100: 48ohm, 101: 40ohm, 110: 34ohm, 111: 30ohm
-        (pSBI->PHY_DSInfo.DRVDS_Byte3 <<  25) | // [27:25] Data Slice 3
-        (pSBI->PHY_DSInfo.DRVDS_Byte2 <<  22) | // [24:22] Data Slice 2
-        (pSBI->PHY_DSInfo.DRVDS_Byte1 <<  19) | // [21:19] Data Slice 1
-        (pSBI->PHY_DSInfo.DRVDS_Byte0 <<  16) | // [18:16] Data Slice 0
-        (pSBI->PHY_DSInfo.DRVDS_CK    <<   9) | // [11: 9] CK
-        (pSBI->PHY_DSInfo.DRVDS_CKE   <<   6) | // [ 8: 6] CKE
-        (pSBI->PHY_DSInfo.DRVDS_CS    <<   3) | // [ 5: 3] CS
-        (pSBI->PHY_DSInfo.DRVDS_CA    <<   0)); // [ 2: 0] CA[9:0], RAS, CAS, WEN, ODT[1:0], RESET, BANK[2:0]
+        (pSBI->PHY_DSInfo.DRVDS_Byte3 <<  25) |     // [27:25] Data Slice 3
+        (pSBI->PHY_DSInfo.DRVDS_Byte2 <<  22) |     // [24:22] Data Slice 2
+        (pSBI->PHY_DSInfo.DRVDS_Byte1 <<  19) |     // [21:19] Data Slice 1
+        (pSBI->PHY_DSInfo.DRVDS_Byte0 <<  16) |     // [18:16] Data Slice 0
+        (pSBI->PHY_DSInfo.DRVDS_CK    <<   9) |     // [11: 9] CK
+        (pSBI->PHY_DSInfo.DRVDS_CKE   <<   6) |     // [ 8: 6] CKE
+        (pSBI->PHY_DSInfo.DRVDS_CS    <<   3) |     // [ 5: 3] CS
+        (pSBI->PHY_DSInfo.DRVDS_CA    <<   0));     // [ 2: 0] CA[9:0], RAS, CAS, WEN, ODT[1:0], RESET, BANK[2:0]
 #else
     WriteIO32( &pReg_DDRPHY->PHY_CON[39+1],     0x00 );
 #endif
@@ -1792,12 +1853,11 @@ void init_DDR3(U32 isResume)
     WriteIO32( &pReg_DDRPHY->PHY_CON[16],
         (0x1    <<  27) |                       // [   27] zq_clk_en. ZQ I/O clock enable.
 #if 0
-        (PHY_DRV_STRENGTH_48OHM <<  24) |       // [26:24] zq_mode_dds, Driver strength selection. 100 : 48ohm, 101 : 40ohm, 110 : 34ohm, 111 : 30ohm
-        (PHY_DRV_STRENGTH_120OHM<<  21) |       // [23:21] ODT resistor value. 001 : 120ohm, 010 : 60ohm, 011 : 40ohm, 100 : 30ohm
+        (PHY_DRV_STRENGTH_48OHM     <<  24) |   // [26:24] zq_mode_dds, Driver strength selection. 100 : 48ohm, 101 : 40ohm, 110 : 34ohm, 111 : 30ohm
+        (PHY_DRV_STRENGTH_120OHM    <<  21) |   // [23:21] ODT resistor value. 001 : 120ohm, 010 : 60ohm, 011 : 40ohm, 100 : 30ohm
 #else
-        (pSBI->PHY_DSInfo.ZQ_DDS  <<  24) |     // [26:24] zq_mode_dds, Driver strength selection. 100 : 48ohm, 101 : 40ohm, 110 : 34ohm, 111 : 30ohm
-        (pSBI->PHY_DSInfo.ZQ_ODT  <<  21) |     // [23:21] ODT resistor value. 001 : 120ohm, 010 : 60ohm, 011 : 40ohm, 100 : 30ohm
-
+        (pSBI->PHY_DSInfo.ZQ_DDS    <<  24) |   // [26:24] zq_mode_dds, Driver strength selection. 100 : 48ohm, 101 : 40ohm, 110 : 34ohm, 111 : 30ohm
+        (pSBI->PHY_DSInfo.ZQ_ODT    <<  21) |   // [23:21] ODT resistor value. 001 : 120ohm, 010 : 60ohm, 011 : 40ohm, 100 : 30ohm
 #endif
         (0x0    <<  20) |                       // [   20] zq_rgddr3. GDDR3 mode. 0:Enable, 1:Disable
         (0x0    <<  19) |                       // [   19] zq_mode_noterm. Termination. 0:Enable, 1:Disable
@@ -1818,12 +1878,15 @@ void init_DDR3(U32 isResume)
 
     // Step 3. Set the PHY for dqs pull down mode
     WriteIO32( &pReg_DDRPHY->PHY_CON[14],
-        (0x0    <<   8) |       // ctrl_pulld_dq[11:8]
-        (0xF    <<   0));       // ctrl_pulld_dqs[7:0].  No Gate leveling : 0xF, Use Gate leveling : 0x0(X)
+        (0x0    <<   8) |           // ctrl_pulld_dq[11:8]
+        (0xF    <<   0));           // ctrl_pulld_dqs[7:0].  No Gate leveling : 0xF, Use Gate leveling : 0x0(X)
     // Step 4. ODT
     WriteIO32( &pReg_Drex->PHYCONTROL[0],
+#if (CFG_ODT_ENB == 1)
         (0x1    <<  31) |           // [   31] mem_term_en. Termination Enable for memory. Disable : 0, Enable : 1
         (0x1    <<  30) |           // [   30] phy_term_en. Termination Enable for PHY. Disable : 0, Enable : 1
+        (0x0    <<   0) |           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+#endif
         (0x1    <<  29) |           // [   29] ctrl_shgate. Duration of DQS Gating Signal. gate signal length <= 200MHz : 0, >200MHz : 1
         (0x0    <<  24) |           // [28:24] ctrl_pd. Input Gate for Power Down.
 //        (0x0    <<   7) |           // [23: 7] Reserved - SBZ
@@ -1831,16 +1894,16 @@ void init_DDR3(U32 isResume)
 //        (0x1    <<   3) |           // [    3] fp_resync. Force DLL Resyncronization : 1. Test : 0x0
         (0x0    <<   3) |           // [    3] fp_resync. Force DLL Resyncronization : 1. Test : 0x0
         (0x0    <<   2) |           // [    2] Reserved - SBZ
-        (0x0    <<   1) |           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
-        (0x0    <<   0));           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+        (0x0    <<   1));           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
 
 #if 1
     WriteIO32( &pReg_Drex->CONCONTROL,
         (0x0    <<  28) |           // [   28] dfi_init_start
         (0xFFF  <<  16) |           // [27:16] timeout_level0
-        (0x3    <<  12) |           // [14:12] rd_fetch
+//        (0x3    <<  12) |           // [14:12] rd_fetch
+        (0x1    <<  12) |           // [14:12] rd_fetch
         (0x1    <<   8) |           // [    8] empty
-        (0x1    <<   5) |           // [    5] aref_en - Auto Refresh Counter. Disable:0, Enable:1
+//        (0x1    <<   5) |           // [    5] aref_en - Auto Refresh Counter. Disable:0, Enable:1
         (0x0    <<   3) |           // [    3] io_pd_con - I/O Powerdown Control in Low Power Mode(through LPI)
         (0x0    <<   1));           // [ 2: 1] clk_ratio. Clock ratio of Bus clock to Memory clock. 0x0 = 1:1, 0x1~0x3 = Reserved
 #else
@@ -2178,6 +2241,9 @@ void init_DDR3(U32 isResume)
     temp |= (lock_div4 <<  8);                                              // ctrl_force[14:8]
     WriteIO32( &pReg_DDRPHY->PHY_CON[12],   temp );
 
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]= 1. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
+
+
 #if (DDR_NEW_LEVELING_TRAINING == 0)
     SetIO32  ( &pReg_DDRPHY->PHY_CON[2],    (0x1    <<  24) );              // rdlvl_gate_en=1
 
@@ -2232,25 +2298,6 @@ void init_DDR3(U32 isResume)
 #endif
 #endif  //#if (CONFIG_SET_MEM_TRANING_FROM_NSIH == 0)
 
-    if (isResume == 0)
-    {
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     1);                 // open alive power gate
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     1);                 // open alive power gate
-
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST5,    0xFFFFFFFF);        // clear - ctrl_shiftc
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST6,    0xFFFFFFFF);        // clear - ctrl_offsetC
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST7,    0xFFFFFFFF);        // clear - ctrl_offsetr
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST8,    0xFFFFFFFF);        // clear - ctrl_offsetw
-
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET5,    g_GateCycle);       // store - ctrl_shiftc
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET6,    g_GateCode);        // store - ctrl_offsetc
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET7,    g_RDvwmc);          // store - ctrl_offsetr
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET8,    g_WRvwmc);          // store - ctrl_offsetw
-
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     0);                 // close alive power gate
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     0);                 // close alive power gate
-    }
-
     WriteIO32( &pReg_DDRPHY->PHY_CON[14],   0x00000000 );               // ctrl_pulld_dq[11:8]=0x0, ctrl_pulld_dqs[3:0]=0x0
     ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x3    <<  13) );          // p0_cmd_en[14]=0, byte_rdlvl_en[13]=0
 #endif  // #if (DDR_NEW_LEVELING_TRAINING == 1)
@@ -2300,7 +2347,7 @@ void init_DDR3(U32 isResume)
 #endif
         (0x0    <<   7) |           // [    7] ctrl_ckdis. 0:Clock output Enable, 1:Disable
         (0x1    <<   6) |           // [    6] ctrl_atgate.
-        (0x1    <<   5) |           // [    5] ctrl_read_disable. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
+//        (0x1    <<   5) |           // [    5] ctrl_read_disable. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
         (0x0    <<   4) |           // [    4] ctrl_cmosrcv.
         (0x0    <<   3) |           // [    3] ctrl_read_width.
         (0x0    <<   0));           // [ 2: 0] ctrl_fnc_fb. 000:Normal operation.
@@ -2327,15 +2374,17 @@ void init_DDR3(U32 isResume)
 #endif
 
     WriteIO32( &pReg_Drex->PHYCONTROL[0],
+#if (CFG_ODT_ENB == 1)
         (0x1    <<  31) |           // [   31] mem_term_en. Termination Enable for memory. Disable : 0, Enable : 1
         (0x1    <<  30) |           // [   30] phy_term_en. Termination Enable for PHY. Disable : 0, Enable : 1
+        (0x0    <<   0) |           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+#endif
         (0x1    <<  29) |           // [   29] ctrl_shgate. Duration of DQS Gating Signal. gate signal length <= 200MHz : 0, >200MHz : 1
         (0x0    <<  24) |           // [28:24] ctrl_pd. Input Gate for Power Down.
 //        (0x0    <<   7) |           // [23: 7] reserved - SBZ
         (0x0    <<   4) |           // [ 6: 4] dqs_delay. Delay cycles for DQS cleaning. refer to DREX datasheet
         (0x0    <<   3) |           // [    3] fp_resync. Force DLL Resyncronization : 1. Test : 0x0
-        (0x0    <<   1) |           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
-        (0x0    <<   0));           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+        (0x0    <<   1));           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
 
     WriteIO32( &pReg_Drex->CONCONTROL,
         (0x0    <<  28) |           // [   28] dfi_init_start

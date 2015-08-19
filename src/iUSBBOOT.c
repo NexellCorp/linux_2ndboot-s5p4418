@@ -496,6 +496,12 @@ static void nx_usb_reset(USBBOOTSTATUS * pUSBBootStatus)
 static S32 nx_usb_set_init(USBBOOTSTATUS * pUSBBootStatus)
 {
     U32 status = pUOReg->DCSR.DSTS; /* System status read */
+    union
+    {
+        U32 AID;
+        U16 SID[2];
+        U8  BID[4];
+    } USBID;
 
     pUSBBootStatus->bHeaderReceived = CFALSE;
     pUSBBootStatus->iRxHeaderSize = 0;
@@ -549,10 +555,33 @@ static S32 nx_usb_set_init(USBBOOTSTATUS * pUSBBootStatus)
         pUOReg->DCSR.DEPOR[CONTROL_EP].DOEPCTL = (1u<<31)|(1<<26)|(3<<0);
     }
 
-    pUSBBootStatus->DeviceDescriptor[8]  = (U8)(g_USBD_VID & 0xFF);  //  8 vendor ID LSB
-    pUSBBootStatus->DeviceDescriptor[9]  = (U8)(g_USBD_VID >> 8);    //  9 vendor ID MSB
-    pUSBBootStatus->DeviceDescriptor[10] = (U8)(g_USBD_PID & 0xFF);  // 10 product ID LSB    (second product)
-    pUSBBootStatus->DeviceDescriptor[11] = (U8)(g_USBD_PID >> 8);    // 11 product ID MSB
+    //--------------------------------------------------------------------------
+    // get VID & PID for USBD
+    //--------------------------------------------------------------------------
+#if defined(CHIPID_NXP4330)
+    USBID.SID[1] = USBD_VID;
+    USBID.SID[0] = USBD_PID;
+#else
+
+    USBID.AID= ReadIO32(&pReg_ECID->ECID[3]);
+
+    if ((USBID.SID[0] == 0) || (USBID.SID[1] == 0))
+    {
+        USBID.SID[1] = USBD_VID;
+        USBID.SID[0] = USBD_PID;
+    }
+    else
+    {
+        USBID.SID[1] = 0x04E8;
+        USBID.SID[0] = 0x1234;
+    }
+#endif
+//    SYSMSG("USBD VID = %04X, PID = %04X\r\n", g_USBD_VID, g_USBD_PID);
+
+    pUSBBootStatus->DeviceDescriptor[8]  = (U8)(USBID.BID[2]);  //  8 vendor ID LSB
+    pUSBBootStatus->DeviceDescriptor[9]  = (U8)(USBID.BID[3]);  //  9 vendor ID MSB
+    pUSBBootStatus->DeviceDescriptor[10] = (U8)(USBID.BID[0]);  // 10 product ID LSB    (second product)
+    pUSBBootStatus->DeviceDescriptor[11] = (U8)(USBID.BID[1]);  // 11 product ID MSB
 
     /* set_opmode */
     pUOReg->GCSR.GINTMSK = INT_RESUME|INT_OUT_EP|INT_IN_EP|INT_ENUMDONE|INT_RESET|INT_SUSPEND|INT_RX_FIFO_NOT_EMPTY;

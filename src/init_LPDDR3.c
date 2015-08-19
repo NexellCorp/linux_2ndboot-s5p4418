@@ -12,9 +12,9 @@
 #define DDR_CA_SWAP_MODE                (0)
 #define DDR_CA_CALIB_EN                 (1)     // for LPDDR3
 #define DDR_GATE_LEVELING_EN            (1)     // for DDR3, great then 667MHz
-#define DDR_READ_DQ_CALIB_EN            (0)
+#define DDR_READ_DQ_CALIB_EN            (1)
 #define DDR_WRITE_LEVELING_CALIB_EN     (0)     // for Fly-by
-#define DDR_WRITE_DQ_CALIB_EN           (0)
+#define DDR_WRITE_DQ_CALIB_EN           (1)
 
 #define DDR_GATE_LVL_COMPENSATION_EN    (0)     // Do not use. for Test.
 #define DDR_READ_DQ_COMPENSATION_EN     (1)
@@ -51,6 +51,7 @@
 
 
 #define CFG_DDR_LOW_FREQ                (1)
+#define CFG_ODT_ENB                     (0)
 
 
 #if 1   //(CFG_NSIH_EN == 0)
@@ -62,12 +63,12 @@
 
 extern void setMemPLL(int);
 
-static U32  g_DDRLock;
-static U32  g_GateCycle;
-static U32  g_GateCode;
-static U32  g_RDvwmc;
-static U32  g_WRvwmc;
-static U32  g_CAvwmc;
+U32 g_DDRLock;
+U32 g_GateCycle;
+U32 g_GateCode;
+U32 g_RDvwmc;
+U32 g_WRvwmc;
+U32 g_CAvwmc;
 
 
 inline void DMC_Delay(int milisecond)
@@ -1344,6 +1345,11 @@ void init_LPDDR3(U32 isResume)
 #endif
 #endif
 
+    MR1.Reg  = 0;
+    MR2.Reg  = 0;
+    MR3.Reg  = 0;
+    MR11.Reg = 0;
+
     MEMMSG("\r\nLPDDR3 POR Init Start\r\n");
 
     // Step 1. reset (Min : 10ns, Typ : 200us)
@@ -1492,7 +1498,9 @@ void init_LPDDR3(U32 isResume)
 
     MR3.LP_MR3.DS       = 2;
 
+#if (CFG_ODT_ENB == 1)
     MR11.LP_MR11.DQ_ODT = 2;    // DQ ODT - 0: Disable, 1: Rzq/4, 2: Rzq/2, 3: Rzq/1
+#endif
     MR11.LP_MR11.PD_CON = 0;
 #else
 
@@ -1521,7 +1529,9 @@ void init_LPDDR3(U32 isResume)
 
     MR3.LP_MR3.DS       = pSBI->LPDDR3_DSInfo.MR3_DS;
 
+#if (CFG_ODT_ENB == 1)
     MR11.LP_MR11.DQ_ODT = pSBI->LPDDR3_DSInfo.MR11_DQ_ODT;
+#endif
     MR11.LP_MR11.PD_CON = pSBI->LPDDR3_DSInfo.MR11_PD_CON;
 #endif
 
@@ -1675,8 +1685,11 @@ void init_LPDDR3(U32 isResume)
         (0xF    <<   0));           // ctrl_pulld_dqs[7:0].  No Gate leveling : 0xF, Use Gate leveling : 0x0(X)
     // Step 4. ODT
     WriteIO32( &pReg_Drex->PHYCONTROL[0],
+#if (CFG_ODT_ENB == 1)
         (0x1    <<  31) |           // [   31] mem_term_en. Termination Enable for memory. Disable : 0, Enable : 1
         (0x1    <<  30) |           // [   30] phy_term_en. Termination Enable for PHY. Disable : 0, Enable : 1
+        (0x0    <<   0) |           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+#endif
 #if defined(MEM_TYPE_DDR3)
         (0x1    <<  29) |           // [   29] ctrl_shgate. Duration of DQS Gating Signal. gate signal length <= 200MHz : 0, >200MHz : 1
 #endif
@@ -1686,14 +1699,14 @@ void init_LPDDR3(U32 isResume)
 //        (0x1    <<   3) |           // [    3] fp_resync. Force DLL Resyncronization : 1. Test : 0x0
         (0x0    <<   3) |           // [    3] fp_resync. Force DLL Resyncronization : 1. Test : 0x0
         (0x0    <<   2) |           // [    2] Reserved - SBZ
-        (0x0    <<   1) |           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
-        (0x0    <<   0));           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+        (0x0    <<   1));           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
 
 #if 1
     WriteIO32( &pReg_Drex->CONCONTROL,
         (0x0    <<  28) |           // [   28] dfi_init_start
         (0xFFF  <<  16) |           // [27:16] timeout_level0
-        (0x3    <<  12) |           // [14:12] rd_fetch
+//        (0x3    <<  12) |           // [14:12] rd_fetch
+        (0x1    <<  12) |           // [14:12] rd_fetch
         (0x1    <<   8) |           // [    8] empty
 //        (0x1    <<   5) |           // [    5] aref_en - Auto Refresh Counter. Disable:0, Enable:1
         (0x0    <<   3) |           // [    3] io_pd_con - I/O Powerdown Control in Low Power Mode(through LPI)
@@ -2262,26 +2275,6 @@ void init_LPDDR3(U32 isResume)
 #endif
 #endif  //#if (CONFIG_SET_MEM_TRANING_FROM_NSIH == 0)
 
-    if (isResume == 0)
-    {
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     1);                 // open alive power gate
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     1);                 // open alive power gate
-
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST5,    0xFFFFFFFF);        // clear - ctrl_shiftc
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST6,    0xFFFFFFFF);        // clear - ctrl_offsetC
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST7,    0xFFFFFFFF);        // clear - ctrl_offsetr
-        WriteIO32(&pReg_Alive->ALIVESCRATCHRST8,    0xFFFFFFFF);        // clear - ctrl_offsetw
-
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET5,    g_GateCycle);       // store - ctrl_shiftc
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET6,    g_GateCode);        // store - ctrl_offsetc
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET7,    g_RDvwmc);          // store - ctrl_offsetr
-        WriteIO32(&pReg_Alive->ALIVESCRATCHSET8,    g_WRvwmc);          // store - ctrl_offsetw
-        WriteIO32(&pReg_RTC->RTCSCRATCH,            g_CAvwmc);          // store - ctrl_offsetd
-
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     0);                 // close alive power gate
-        WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,     0);                 // close alive power gate
-    }
-
 #if defined(MEM_TYPE_DDR3)
     WriteIO32( &pReg_DDRPHY->PHY_CON[14],   0x00000000 );               // ctrl_pulld_dq[11:8]=0x0, ctrl_pulld_dqs[3:0]=0x0
 #endif
@@ -2361,8 +2354,11 @@ void init_LPDDR3(U32 isResume)
 #endif
 
     WriteIO32( &pReg_Drex->PHYCONTROL[0],
+#if (CFG_ODT_ENB == 1)
         (0x1    <<  31) |           // [   31] mem_term_en. Termination Enable for memory. Disable : 0, Enable : 1
         (0x1    <<  30) |           // [   30] phy_term_en. Termination Enable for PHY. Disable : 0, Enable : 1
+        (0x0    <<   0) |           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+#endif
 #if defined(MEM_TYPE_DDR3)
         (0x1    <<  29) |           // [   29] ctrl_shgate. Duration of DQS Gating Signal. gate signal length <= 200MHz : 0, >200MHz : 1
 #endif
@@ -2370,12 +2366,12 @@ void init_LPDDR3(U32 isResume)
 //        (0x0    <<   7) |           // [23: 7] reserved - SBZ
         (0x0    <<   4) |           // [ 6: 4] dqs_delay. Delay cycles for DQS cleaning. refer to DREX datasheet
         (0x0    <<   3) |           // [    3] fp_resync. Force DLL Resyncronization : 1. Test : 0x0
-        (0x0    <<   1) |           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
-        (0x0    <<   0));           // [    0] mem_term_chips. Memory Termination between chips(2CS). Disable : 0, Enable : 1
+        (0x0    <<   1));           // [    1] sl_dll_dyn_con. Turn On PHY slave DLL dynamically. Disable : 0, Enable : 1
 
     WriteIO32( &pReg_Drex->CONCONTROL,
         (0x0    <<  28) |           // [   28] dfi_init_start
         (0xFFF  <<  16) |           // [27:16] timeout_level0
+//        (0x3    <<  12) |           // [14:12] rd_fetch
         (0x1    <<  12) |           // [14:12] rd_fetch
         (0x1    <<   8) |           // [    8] empty
         (0x1    <<   5) |           // [    5] aref_en - Auto Refresh Counter. Disable:0, Enable:1

@@ -312,7 +312,7 @@ void NX_CLKPWR_SetOSCFreq( U32 FreqKHz )
     __g_OSC_KHz = FreqKHz;
 }
 
-U32 NX_CLKPWR_GetPLLFreq(U32 PllNumber)
+U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber)
 {
     U32 regvalue, regvalue1, nP, nM, nS, nK;
     U32 temp = 0;
@@ -539,39 +539,39 @@ void PLLDynamicChange(U32 Freq)
 
 void printClkInfo(void)
 {
-#if 1
+#if 0
     SYSMSG(" PLL0: %d   PLL1: %d   PLL2: %d   PLL3: %d\r\n\r\n",
-            NX_CLKPWR_GetPLLFreq(0),
-            NX_CLKPWR_GetPLLFreq(1),
-            NX_CLKPWR_GetPLLFreq(2),
-            NX_CLKPWR_GetPLLFreq(3));
+            NX_CLKPWR_GetPLLFrequency(0),
+            NX_CLKPWR_GetPLLFrequency(1),
+            NX_CLKPWR_GetPLLFrequency(2),
+            NX_CLKPWR_GetPLLFrequency(3));
 
     SYSMSG(" Divider0 PLL: %d CPU:%d   CPU BUS:%d\r\n",
             NX_CLKPWR_GetSrcPll(0),
-            getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(0)), ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(0)),
+            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)), ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
+            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)),
                     ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
                     ((NX_CLKPWR_GetDivideValue(0)>> 8)&0x3F)));
 
     SYSMSG(" Divider1 PLL: %d BCLK:%d   PCLK:%d\r\n",
             NX_CLKPWR_GetSrcPll(1),
-            getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(1)),((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(1))
+            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1)),((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F)),
+            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1))
                     ,((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(1)>> 8)&0x3F)));
 
     SYSMSG(" Divider2 PLL: %d MDCLK:%d   MCLK:%d   \r\n\t\t MBCLK:%d   MPCLK:%d\r\n",
             NX_CLKPWR_GetSrcPll(2),
-            getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(2))
+            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(2))
+            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F)),
-            getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(2))
+            getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F)),
-            getquotient(getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(2))
+            getquotient(getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F))
@@ -579,12 +579,12 @@ void printClkInfo(void)
 
     SYSMSG(" Divider3 PLL: %d G3D BCLK:%d\r\n",
             NX_CLKPWR_GetSrcPll(3),
-            getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(3)),((NX_CLKPWR_GetDivideValue(3)>> 0)&0x3F)));
+            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(3)),((NX_CLKPWR_GetDivideValue(3)>> 0)&0x3F)));
 
     SYSMSG(" Divider4 PLL: %d MPEG BCLK:%d   MPEG PCLK:%d\r\n\r\n",
             NX_CLKPWR_GetSrcPll(4),
-            getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(4)),((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFreq(NX_CLKPWR_GetSrcPll(4))
+            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4)),((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F)),
+            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4))
                     ,((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F))
                     ,((NX_CLKPWR_GetDivideValue(4)>> 8)&0x3F)));
 #endif

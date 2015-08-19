@@ -36,7 +36,7 @@ void setBusConfig(void)
     DREX_QOS   |= (1<<12) | (1<<8);
 #endif
 
-#if 0
+#if 1
     miNum = 0;
     WriteIO32( NX_BASE_ADDR_BOTT_QOS_TRDMARK    + (0x20 * miNum),   (1 << 0) );    // wait count for MI0 QoS adjust.
 //    ClearIO32( NX_BASE_ADDR_BOTT_QOS_CTRL       + (0x20 * miNum),   (1 << 6) | (1 << 7) ); // org - coda960

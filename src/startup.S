@@ -20,7 +20,7 @@
 #include "cfgBootDefine.h"
 
 
-        .align 8
+        .align
 /*
  * start and end of BSS
  */
@@ -33,7 +33,10 @@
  */
 .global BootMain
 .global SubCPUBoot
+.global ExceptionV
+.global SystemSleep
 
+        .text
 //;==================================================================
 //; Vectors
 //;==================================================================
@@ -52,10 +55,11 @@ Sleep:
         b       SystemSleep         //; 20
 
 BuildInfo:
-        .word   0x44180600          //; 24, , Chip name - 4418, Build num - v0.6.00
+        .word   0x44180601          //; 24, , Chip name - 4418, Build num - v0.6.00
 
 //        b       DynamicPllChange    //; for Samsung VD
 
+//.global ExceptionV
 ExceptionV:
         msr     CPSR_c, #(Mode_SVC|I_Bit|F_Bit)
 
@@ -95,10 +99,10 @@ Reset_Handler:
 //;==================================================================
 //; Set SRAM size
 //;==================================================================
+#if 0
         ldr     r0, =0xC0067000                     //; ECID Base address
         ldr     r1, [r0, #0x0C]                     //; Read ECID_03 register.
 
-#if 0
         mov     r2, #0
         ldr     r0, =g_SRAM_SIZE
         cmp     r1, r2                              //; if (r1 == 0) r1 = nxp4330 else r1 = s5p4418
@@ -151,95 +155,20 @@ Mainroot:
         msr     CPSR_c, #(Mode_SVC|I_Bit|F_Bit)
 
         //; Get value of internal sram size.
-        ldr     r0, =g_SRAM_SIZE
-        ldr     r4, [r0]
+//        ldr     r0, =g_SRAM_SIZE
+//        ldr     r4, [r0]
 
         //; Set stack pointer
         ldr     sp, =BASEADDR_SRAM
-        add     sp, sp, r4                          //; Add to internal sram size.
+//        add     sp, sp, r4                          //; Add to internal sram size.
+        add     sp, sp, #INTERNAL_SRAM_SIZE         //; Add to internal sram size.
         sub     sp, sp, #0x60
         mov     r0, r12
 
         bl      BootMain                            //; save this in register for possible long jump
         b       ExceptionV
 
-//;==================================================================
-//; PLL Change
-//;==================================================================
-        .align 8                                    //; below instruction number is 8, 32bytes
 
-.global __pllchange
-__pllchange:                                        //; r0:data r1:pll address r2:delay count
-        mov     r3, #0x100                          //; for icache prefetch
-pllchangedelayloop:                                 //; this code will be already within i-cache. no bus transaction will make
-        subs    r3, r3, #1
-        streq   r0, [r1]                            //; pll change start
-        moveqs  r3, r2                              //; real delay time set
-        cmpne   r3, #0x100
-        bne     pllchangedelayloop
-        bx      lr
-        nop
-
-//;==================================================================
-//; Self-Refresh Service
-//;==================================================================
-#if (CONFIG_SUSPEND_RESUME == 1)
-.global enterSelfRefresh                            //; this code is call linux kernel, so here is virtual memory space.
-.global sleepMain
-.global vddPowerOff
-SystemSleep:        //; r0:alive r1:drex
-
-    //;-----------------------
-    //;   Disable MMU
-    //;-----------------------
-
-DisableMMU:
-        mrc     p15, 0, r1, c1, c0, 0   //; Read control register
-        bic     r1, r1, #0x1            //; Disable MMU.
-        bic     r1, r1, #0x1000         //; Disable IC.
-        bic     r1, r1, #0x4            //; Dsiable DC.
-
-        ldr     r0, =PhysicalStart
-        cmp     r0, #0                  //; make sure no stall on "mov pc,r0" below
-
-        //; Disable the MMU.
-        //;
-        mcr     p15, 0, r1, c1, c0, 0
-
-        //; Jump to the physical address of the 'PhysicalStart' label.
-        //;
-        mov     pc, r0                  //;  & jump to new physical address
-        nop
-        nop
-        nop
-
-        //; MMU & caches now disabled.
-        //;
-
-        .align 4
-PhysicalStart:
-
-        //; Disable IRQ & FIQ.
-        mrs     r0, CPSR
-        orr     r0, r0, #(I_Bit|F_Bit)
-        msr     CPSR_cxsf, r0
-
-        //; Get value of internal sram size.
-        ldr     r0, =g_SRAM_SIZE
-        ldr     r4, [r0]
-
-        //; Set stack pointer
-        ldr     sp, =BASEADDR_SRAM
-        add     sp, sp, r4                          //; Add to internal sram size.
-//        add     sp, sp, #INTERNAL_SRAM_SIZE
-
-        //; Goto sleepMain function.
-        bl      sleepMain
-#else
-
-SystemSleep:        //; r0:alive r1:drex
-#endif
-        b       .                                   //; this time, core power will off and so cpu will die.
 
 
 #if 0   //; for Samsung VD
@@ -283,69 +212,8 @@ CPUBRINGUP:
         mcr     p15, 0, r0, c1, c0, 0               //; Write SCTLR
 
 
-//;==================================================================
-//; Invalidate entire branch predictor
-//;==================================================================
-        mov     r0, #0
-        mcr     p15, 0, r0, c7, c5, 0               //; invalidate all instruction caches
-        mcr     p15, 0, r0, c7, c5, 6               //; BPIALL - Invalidate entire branch predictor array
-
-//;==================================================================
-//; Cache Invalidation code for Cortex-A9
-//;==================================================================
-
-        //;----------------------------------------------------------------------
-        //; Invalidate Data/Unified Caches
-        //;----------------------------------------------------------------------
-        mrc     p15, 1, r0, c0, c0, 1               //; Read CLIDR
-        ands    r3, r0, #0x7000000
-        mov     r3, r3, lsr #23                     //; Total cache levels << 1
-        beq     finished
-        mov     r10, #0                             //; r10 holds current cache level << 1
-
-loop1:
-        add     r2, r10, r10, lsr #1                //; r2 holds cache "Set" position
-        mov     r1, r0, lsr r2                      //; Bottom 3 bits are the Cache-type for this level
-        and     r1, r1, #7                          //; Get those 3 bits alone
-        cmp     r1, #2
-        blt     skip                                //; No cache or only instruction cache at this level
-
-        mcr     p15, 2, r10, c0, c0, 0              //; Write the Cache Size selection register
-        mov     r1, #0
-        mcr     p15, 0, r1, c7, c5, 4               //; PrefetchFlush to sync the change to the CacheSizeID reg
-        mrc     p15, 1, r1, c0, c0, 0               //; Reads current Cache Size ID register
-        and     r2, r1, #0x7                        //; Extract the line length field
-        add     r2, r2, #4                          //; Add 4 for the line length offset (log2 16 bytes)
-        ldr     r6, =0x3FF
-        ands    r6, r6, r1, lsr #3                  //; r6 is the max number on the way size (right aligned)
-        clz     r5, r6                              //; r5 is the bit position of the way size increment
-        ldr     r7, =0x00007FFF
-        ands    r7, r7, r1, lsr #13                 //; r7 is the max number of the index size (right aligned)
-
-loop2:
-        mov     r9, r6                              //; r9 working copy of the max way size (right aligned)
-
-loop3:
-        orr     r11, r10, r9, lsl r5                //; Factor in the Way number and cache number into r11
-        orr     r11, r11, r7, lsl r2                //; Factor in the Set number
-        mcr     p15, 0, r11, c7, C6, 2              //; Clean and Invalidate by set/way
-        subs    r9, r9, #1                          //; Decrement the Way number
-        bge     loop3
-        subs    r7, r7, #1                          //; Decrement the Set number
-        bge     loop2
-
-skip:
-        add     r10, r10, #2                        //; increment the cache number
-        cmp     r3, r10
-        bgt     loop1
-
-finished:
-        mov     r0, #0
-        mcr     p15, 0, r0, c7, c10, 4              //; drain write buffer
-
-        mcr     p15, 0, r0, c8, c7, 0               //; invalidate I + D TLBs
-        mcr     p15, 0, r0, C2, c0, 2               //; TTB control register
-
+        bl      Invalidate_entire_branch_predictor
+        bl      InvalidateDataCache
 
 //;==================================================================
 //; Set SMP Mode for CPU 1, 2, 3
@@ -361,7 +229,7 @@ finished:
 
         str     r0, [r1, #0x100]                    //; CPU IF enable
 
-        mov     r0, #0xFF
+        mov     r0, #0x00FF
         orr     r0, #0xFF00
         str     r0, [r2, #100]                      //; distributor set enable
 
@@ -374,12 +242,13 @@ finished:
         mcreq   p15, 0, r0, c1, c0, 1               //;  write Aux Control Register
 
         //; Get value of internal sram size.
-        ldr     r0, =g_SRAM_SIZE
-        ldr     r4, [r0]
+//        ldr     r0, =g_SRAM_SIZE
+//        ldr     r4, [r0]
 
         //; Set stack pointer
         ldr     sp, =BASEADDR_SRAM
-        add     sp, sp, r4                          //; Add to internal sram size.
+//        add     sp, sp, r4                          //; Add to internal sram size.
+        add     sp, sp, #INTERNAL_SRAM_SIZE         //; Add to internal sram size.
 
         mov     r1, #0x20
         sub     r2, r12, #1
@@ -409,62 +278,77 @@ __WFI:
         beq     __WFI
 
 
-#if 0
-.global BurstWrite
-BurstWrite:
-        push    {r2-r9, lr}
-        mvn     r2, r1
-        mvn     r3, r1
-        mvn     r4, r1
-        mvn     r5, r1
-        mov     r6, r1
-        mvn     r7, r1
-        mvn     r8, r1
-        mvn     r9, r1
-        stmia   r0!, {r2-r9}
-        pop     {r2-r9, pc}
-
-.global BurstRead
-BurstRead:
-        push    {r2-r9, lr}
-        ldmia   r0!, {r2-r9}
-        stmia   r1!, {r2-r9}
-        pop     {r2-r9, pc}
-#endif
-
 //;==================================================================
-//; Cache control
+//; Self-Refresh Service
 //;==================================================================
+#if (CONFIG_SUSPEND_RESUME == 1)
+.global enterSelfRefresh                            //; this code is call linux kernel, so here is virtual memory space.
+.global sleepMain
+.global vddPowerOff
+.global SystemSleep
+SystemSleep:        //; r0:alive r1:drex
 
-.global flushICache
-flushICache:
-        mov     r0, #0
-        mcr     p15, 0, r0, c7, c5, 0
+    //;-----------------------
+    //;   Disable MMU
+    //;-----------------------
 
-        mov     pc, lr
-        b       .
+DisableMMU:
+        mrc     p15, 0, r1, c1, c0, 0   //; Read control register
+        bic     r1, r1, #0x5            //; Disable MMU & DC.
+        bic     r1, r1, #0x1000         //; Disable IC.
 
+        ldr     r0, =PhysicalStart
+        cmp     r0, #0                  //; make sure no stall on "mov pc,r0" below
 
-.global enableICache
-enableICache:
-        cmp     r0, #1
-        mrc     p15, 0, r1, c1, c0, 0
-        bicne   r1, r1, #0x1000
-        orreq   r1, r1, #0x1000
+        //; Disable the MMU.
+        //;
         mcr     p15, 0, r1, c1, c0, 0
 
-        mov     pc, lr
-        b       .
+        //; Jump to the physical address of the 'PhysicalStart' label.
+        //;
+        mov     pc, r0                  //;  & jump to new physical address
+        nop
+        nop
+        nop
+
+        //; MMU & caches now disabled.
+        //;
+
+//;        .align 4
+PhysicalStart:
+
+        //; Disable IRQ & FIQ.
+        mrs     r0, CPSR
+        orr     r0, r0, #(I_Bit|F_Bit)
+        msr     CPSR_cxsf, r0
+
+        //; Get value of internal sram size.
+//        ldr     r0, =g_SRAM_SIZE
+//        ldr     r4, [r0]
+
+        //; Set stack pointer
+        ldr     sp, =BASEADDR_SRAM
+//        add     sp, sp, r4                          //; Add to internal sram size.
+        add     sp, sp, #INTERNAL_SRAM_SIZE         //; Add to internal sram size.
+
+        //; Goto sleepMain function.
+        bl      sleepMain
+#else
+
+SystemSleep:        //; r0:alive r1:drex
+#endif
+//        b       .                                   //; this time, core power will off and so cpu will die.
 
 
 //;==================================================================
 //; Global data
 //;==================================================================
+#if 0
 .global g_SRAM_SIZE
 g_SRAM_SIZE:
-//        .long   (16*1024)                           //;4330 : 16KB, 4418 : 32KB
-        .long   (32*1024)                           //;4330 : 16KB, 4418 : 32KB
-
+        .word   (32*1024)                           //;4330 : 16KB, 4418 : 32KB
+#endif
+        .ltorg
 //;==================================================================
 //; End of startup.s
 //;==================================================================

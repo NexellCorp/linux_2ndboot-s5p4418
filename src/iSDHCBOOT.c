@@ -32,6 +32,7 @@ extern U32 getquotient(U32 dividend, U32 divisor);
 
 void ResetCon(U32 devicenum, CBOOL en);
 void GPIOSetAltFunction(U32 AltFunc);
+U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
 
 
 //------------------------------------------------------------------------------
@@ -69,7 +70,7 @@ CBOOL   NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
     U32 nRetry = 1, nTemp = 0;
     CBOOL   fRet = CFALSE;
 
-    srcFreq = NX_CLKPWR_GetPLLFreq(pClkInfo->nPllNum);
+    srcFreq = NX_CLKPWR_GetPLLFrequency(pClkInfo->nPllNum);
 
 retry_getparam:
     for (pClkInfo->nClkDiv = 2; ; pClkInfo->nClkDiv += 2)
@@ -1250,8 +1251,7 @@ U32	iSDXCBOOT( struct NX_SecondBootInfo * pTBI )
 {
 	CBOOL	result = CFALSE;
 	SDXCBOOTSTATUS lSDXCBootStatus;
-	SDXCBOOTSTATUS * pSDXCBootStatus;
-	*(U32 *)0xFFFF7FFC = (U32)&lSDXCBootStatus;
+	SDXCBOOTSTATUS * pSDXCBootStatus = &lSDXCBootStatus;
 
 #if defined(CHIPID_NXP4330)
 	pSBI->DBI.SDMMCBI.PortNumber = 0;
@@ -1259,8 +1259,6 @@ U32	iSDXCBOOT( struct NX_SecondBootInfo * pTBI )
 
 //	pSBI->DBI.SDMMCBI.PortNumber = 1;
 //	pSBI->DEVICEADDR = 128 * 1024;
-
-	pSDXCBootStatus = &lSDXCBootStatus;
 
 	NX_ASSERT ( pSBI->DBI.SDMMCBI.PortNumber < 3 );
 	pSDXCBootStatus->SDPort = pSBI->DBI.SDMMCBI.PortNumber;
