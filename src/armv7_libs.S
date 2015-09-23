@@ -19,15 +19,11 @@
 #include "nx_pyrope.h"
 #include "cfgBootDefine.h"
 
-        .align
-
-
-        .text
 
 //;==================================================================
 //; PLL Change
 //;==================================================================
-        .align 8                                    //; below instruction number is 8, 32bytes
+        .align 5                                    //; below instruction number is 8, 32bytes
 
 .global __pllchange
 __pllchange:                                        //; r0:data r1:pll address r2:delay count
@@ -41,7 +37,7 @@ pllchangedelayloop:                                 //; this code will be alread
         bx      lr
         nop
 
-        .align
+        .align 5
 //;==================================================================
 //; Cache Invalidation code for Cortex-A9
 //;==================================================================

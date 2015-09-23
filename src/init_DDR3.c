@@ -564,8 +564,11 @@ void DDR_Write_Leveling(void)
 
 #else
 #if defined(MEM_TYPE_DDR3)
-    union SDRAM_MR MR1;
+//    union SDRAM_MR MR1;
 #endif
+    int sdll_shift, dq_shift, find_dq;
+    U32 dq_res, dq_sdll, dq_num, i;
+    U32 dq_l, dq_r, dq_c;
     U32 temp;
 
     MEMMSG("\r\n########## Write Leveling - Start ##########\r\n");
@@ -573,7 +576,7 @@ void DDR_Write_Leveling(void)
     SetIO32( &pReg_DDRPHY->PHY_CON[26+1],       (0x3    <<   7) );          // cmd_default, ODT[8:7]=0x3
     SetIO32( &pReg_DDRPHY->PHY_CON[0],          (0x1    <<  16) );          // wrlvl_mode[16]=1
 
-#if defined(MEM_TYPE_DDR3)
+#if 0 //defined(MEM_TYPE_DDR3)
     /* Set MPR mode enable */
     MR1.Reg         = 0;
     MR1.MR1.DLL     = 0;    // 0: Enable, 1 : Disable
@@ -589,10 +592,12 @@ void DDR_Write_Leveling(void)
     MR1.MR1.RTT_Nom1    = 1;
     MR1.MR1.RTT_Nom0    = 0;
     MR1.MR1.WL      = 1;
+#if 0
 #if (CFG_NSIH_EN == 0)
     MR1.MR1.TDQS    = (_DDR_BUS_WIDTH>>3) & 1;
 #else
     MR1.MR1.TDQS    = (pSBI->DII.BusWidth>>3) & 1;
+#endif
 #endif
 
     SendDirectCommand(SDRAM_CMD_MRS, 0, SDRAM_MODE_REG_MR1, MR1.Reg);
@@ -606,7 +611,6 @@ void DDR_Write_Leveling(void)
 #endif
 #endif
 
-#if 0
     // Send NOP command.
     SendDirectCommand(SDRAM_CMD_NOP, 0, (SDRAM_MODE_REG)CNULL, CNULL);
 #if (CFG_NSIH_EN == 0)
@@ -617,21 +621,70 @@ void DDR_Write_Leveling(void)
     if(pSBI->DII.ChipNum > 1)
         SendDirectCommand(SDRAM_CMD_NOP, 1, (SDRAM_MODE_REG)CNULL, CNULL);
 #endif
-#endif
 
-    temp = ( (0x8 << 24) | (0x8 << 17) | (0x8 << 8) | (0x8 << 0)  );        // PHY_CON30[30:24] = ctrl_wrlvl_code3, PHY_CON30[23:17] = ctrl_wrlvl_code2, PHY_CON30[14:8] = ctrl_wrlvl_code1, PHY_CON30[6:0] = ctrl_wrlvl_code0
+    temp = ( (0x8 << 24) | (0x8 << 17) | (0x8 << 8) | (0x8 << 0) );         // PHY_CON30[30:24] = ctrl_wrlvl_code3, PHY_CON30[23:17] = ctrl_wrlvl_code2, PHY_CON30[14:8] = ctrl_wrlvl_code1, PHY_CON30[6:0] = ctrl_wrlvl_code0
     WriteIO32( &pReg_DDRPHY->PHY_CON[30+1],     temp );
-    MEMMSG("ctrl_wrlvl_code = 0x%08X\r\n", temp);
+
+    for (dq_num = 0; dq_num < 4; dq_num++)
+    {
+        dq_l = dq_r = dq_c = 0;
+        find_dq     = 0;
+        dq_shift    = (dq_num * 8);
+        sdll_shift  = dq_shift;
+
+        dq_sdll = ReadIO32( &pReg_DDRPHY->PHY_CON[30+1] ) & ~(0xFF << dq_shift);
+
+        if (dq_num == 2) sdll_shift++;
+
+        for (i = 8; i < 0x39; i++)
+        {
+            temp = dq_sdll | (i << sdll_shift);
+            WriteIO32( &pReg_DDRPHY->PHY_CON[30+1],     temp );
+
+            // SDLL update.
+            SetIO32  ( &pReg_DDRPHY->PHY_CON[30+1],     (0x1    <<  16) );          // wrlvl_enable[16]=1, ctrl_wrlvl_resync
+            ClearIO32( &pReg_DDRPHY->PHY_CON[30+1],     (0x1    <<  16) );          // wrlvl_enable[16]=0, ctrl_wrlvl_resync
+//            DMC_Delay(0x10);
+
+            dq_res = ReadIO32( &pReg_Drex->CTRL_IO_RDATA ) & (1 << dq_shift);
+
+            if (find_dq < 0x3)
+            {
+                if ( dq_res )
+                {
+                    find_dq++;
+                    if(find_dq == 0x1)
+                    {
+                        dq_l = i;
+                    }
+                }
+                else
+                {
+                    find_dq = 0x0;                                 //- 첫 번째 PASS로부터 연속 3회 PASS 하지 못하면 연속 3회 PASS가 발생할 때까지 Searching 다시 시작하도록 "find_vmw" = "0"으로 초기화.
+                }
+            }
+            else if( !dq_res )
+            {
+                find_dq = 0x4;
+                dq_r = i - 1;
+                break;
+            }
+        }
+
+        dq_r = i - 1;
+        dq_c    = ((dq_r - dq_l) >> 1) + 0x8;
+
+        dq_sdll |= (dq_c << sdll_shift);
+        WriteIO32( &pReg_DDRPHY->PHY_CON[30+1],     dq_sdll );
+    }
 
     // SDLL update.
     SetIO32  ( &pReg_DDRPHY->PHY_CON[30+1],     (0x1    <<  16) );          // wrlvl_enable[16]=1, ctrl_wrlvl_resync
     ClearIO32( &pReg_DDRPHY->PHY_CON[30+1],     (0x1    <<  16) );          // wrlvl_enable[16]=0, ctrl_wrlvl_resync
-
-    temp = ReadIO32( &pReg_DDRPHY->PHY_CON[30+1] );                         // PHY_CON30[30:24] = ctrl_wrlvl_code3, PHY_CON30[23:17] = ctrl_wrlvl_code2, PHY_CON30[14:8] = ctrl_wrlvl_code1, PHY_CON30[6:0] = ctrl_wrlvl_code0
-    MEMMSG("ctrl_wrlvl_code = 0x%08X\r\n", temp);
+    DMC_Delay(0x100);
 
     ClearIO32( &pReg_DDRPHY->PHY_CON[0],        (0x1    <<  16) );          // wrlvl_mode[16]=0
-    ClearIO32( &pReg_DDRPHY->PHY_CON[26+1],     (0x3    <<   7) );          // cmd_default, ODT[8:7]=0x0
+//    ClearIO32( &pReg_DDRPHY->PHY_CON[26+1],     (0x3    <<   7) );          // cmd_default, ODT[8:7]=0x0
 
     MEMMSG("\r\n########## Write Leveling - End ##########\r\n");
 #endif

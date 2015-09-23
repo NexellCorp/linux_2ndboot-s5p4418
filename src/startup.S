@@ -314,7 +314,7 @@ DisableMMU:
         //; MMU & caches now disabled.
         //;
 
-//;        .align 4
+        .align 5
 PhysicalStart:
 
         //; Disable IRQ & FIQ.

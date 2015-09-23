@@ -500,7 +500,7 @@ CBOOL DDR_CA_Calibration(void)
             find_vmw = 0x4;
             vwmr = code - 1;
 //            printf("-- %d\r\n", code);
-            printf("mr41 = 0x%08X, mr48 = 0x%08X\r\n", mr41, mr48);
+            MEMMSG("mr41 = 0x%08X, mr48 = 0x%08X\r\n", mr41, mr48);
             break;
         }
 
@@ -508,8 +508,9 @@ CBOOL DDR_CA_Calibration(void)
 
         if (code == 256)
         {
-            MEMMSG("[Error] CA Calibration : code %d\r\n", code);
+            printf("[Error] CA Calibration : code %d\r\n", code);
 
+            while(1);
             goto ca_error_ret;
         }
 
@@ -578,9 +579,7 @@ CBOOL DDR_Gate_Leveling(U32 isResume)
 
     MEMMSG("\r\n########## Gate Leveling - Start ##########\r\n");
 
-    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]=0. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-//    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]= 1. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[14],   (0xF    <<  0) );               // ctrl_pulld_dqs[3:0] = 0
     SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    << 13) );               // byte_rdlvl_en[13]=1
 
     if (isResume == 0)
@@ -808,9 +807,6 @@ gate_err_ret:
 #endif
 #endif  // #if defined(MEM_TYPE_DDR3)
     }
-
-    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<   5) );              // ctrl_read_disable[5]= 1. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
-//    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<   5) );              // ctrl_read_disable[5]=0. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
 
     MEMMSG("\r\n########## Gate Leveling - End ##########\r\n");
 
@@ -1105,6 +1101,8 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
     CBOOL   ret = CTRUE;
 
     MEMMSG("\r\n########## Write DQ Calibration - Start ##########\r\n");
+
+    ClearIO32( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]=0. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
 
 
 #if 1
@@ -2199,7 +2197,7 @@ void init_LPDDR3(U32 isResume)
         temp = ReadIO32( &pReg_DDRPHY->PHY_CON[13] );                       // read lock value
     } while( (temp & 0x7) != 0x7 );
 
-    ClearIO32( &pReg_DDRPHY->PHY_CON[12],       (0x1    <<   5) );          // ctrl_dll_on[5]=0
+//    ClearIO32( &pReg_DDRPHY->PHY_CON[12],       (0x1    <<   5) );          // ctrl_dll_on[5]=0
 
     g_DDRLock = (temp >> 8) & 0x1FF;
     lock_div4 = (g_DDRLock >> 2);
@@ -2208,6 +2206,9 @@ void init_LPDDR3(U32 isResume)
     temp &= ~(0x7F <<  8);
     temp |= (lock_div4 <<  8);                                              // ctrl_force[14:8]
     WriteIO32( &pReg_DDRPHY->PHY_CON[12],   temp );
+
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    <<  5) );               // ctrl_read_disable[5]= 1. Read ODT disable signal. Variable. Set to '1', when you need Read Leveling test.
+
 
 #if (DDR_NEW_LEVELING_TRAINING == 0)
     SetIO32  ( &pReg_DDRPHY->PHY_CON[2],    (0x1    <<  24) );              // rdlvl_gate_en=1
