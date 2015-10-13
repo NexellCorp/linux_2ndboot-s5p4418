@@ -60,10 +60,7 @@ extern U32  get_fcs(U32 fcs, U8 data);
 extern void DMC_Delay(int milisecond);
 extern void ResetCon(U32 devicenum, CBOOL en);
 extern void GPIOSetAltFunction(U32 AltFunc);
-
-
-U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
-
+extern U32  NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
 
 #if 1
 typedef struct {

@@ -58,7 +58,7 @@ InvalidateDataCache:
         //; Invalidate Data/Unified Caches
         //;----------------------------------------------------------------------
         mrc     p15, 1, r0, c0, c0, 1               //; Read CLIDR
-        ands    r3, r0, #0x7000000
+        ands    r3, r0, #0x07000000
         mov     r3, r3, lsr #23                     //; Total cache levels << 1
         beq     finished
         mov     r10, #0                             //; r10 holds current cache level << 1
@@ -124,10 +124,10 @@ flushICache:
 .global enableICache
 enableICache:
         cmp     r0, #1
-        mrc     p15, 0, r1, c1, c0, 0
-        bicne   r1, r1, #0x1000
-        orreq   r1, r1, #0x1000
-        mcr     p15, 0, r1, c1, c0, 0
+        mrc     p15, 0, r0, c1, c0, 0
+        bicne   r0, r0, #BIT1_I
+        orreq   r0, r0, #BIT1_I
+        mcr     p15, 0, r0, c1, c0, 0
 
         mov     pc, lr
         b       .

@@ -30,7 +30,6 @@
 #endif
 #define EMA_VALUE           (1)     // Manual setting - 1(001): 1.1V, 3(011): 1.0V
 
-extern U32      iget_fcs(U32 fcs, U32 data);
 extern U32      __calc_crc(void *addr, int len);
 extern void     DMC_Delay(int milisecond);
 
@@ -128,16 +127,14 @@ CBOOL isEMA3(U32 ecid_1, U32 ecid_2)
 
         /* find ids Level */
         for (i = 0; i < ASV_ARRAY_SIZE; i++) {
-            tb = &asv_tables[i];
-            if (tb->ids >= ids)
+            if (tb[i].ids >= ids)
                 break;
         }
         ids_L = i < ASV_ARRAY_SIZE ? i : (ASV_ARRAY_SIZE-1);
 
         /* find ro Level */
         for (i = 0; i < ASV_ARRAY_SIZE; i++) {
-            tb = &asv_tables[i];
-            if (tb->ro >= ro)
+            if (tb[i].ro >= ro)
                 break;
         }
         ro_L = i < ASV_ARRAY_SIZE ? i : (ASV_ARRAY_SIZE-1);
@@ -158,8 +155,8 @@ void setEMA(void)
     U32 ema, temp;
 
 #if (AUTO_DETECT_EMA == 1)
-    ecid_1 = ReadIO32(PHY_BASEADDR_ECID_MODULE + (1<<2));
-    ecid_2 = ReadIO32(PHY_BASEADDR_ECID_MODULE + (2<<2));
+    ecid_1 = ReadIO32(&pReg_ECID->ECID[1]);
+    ecid_2 = ReadIO32(&pReg_ECID->ECID[2]);
 
     if ( isEMA3(ecid_1, ecid_2) )
         ema = 3;
@@ -197,8 +194,8 @@ static void dowakeup(void)
     void (*jumpkernel)(void) = 0;
 
     WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);             // open alive power gate
-    fn   = ReadIO32(&pReg_Alive->ALIVESCRATCHVALUE1);
     sign = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
+    fn   = ReadIO32(&pReg_Alive->ALIVESCRATCHVALUE1);
     phy  = ReadIO32(&pReg_Alive->ALIVESCRATCHVALUE3);
     crc  = ReadIO32(&pReg_Alive->ALIVESCRATCHVALUE2);
     len  = ReadIO32(&pReg_Alive->ALIVESCRATCHVALUE4);
@@ -218,9 +215,10 @@ static void dowakeup(void)
         printf("CRC: 0x%08X FN: 0x%08X phy: 0x%08X len: 0x%08X ret: 0x%08X\r\n", crc, fn, phy, len, ret);
         if (fn && (crc == ret))
         {
-            U32 temp = 0x100000;
+//            U32 temp = 0x100000;
             printf("It's WARM BOOT\r\nJump to Kernel!\r\n");
-            while(DebugIsBusy() && temp--);
+//            while(DebugIsBusy() && temp--);
+            while(!DebugIsUartTxDone());
             jumpkernel();
         }
     }
@@ -355,7 +353,6 @@ void BootMain( U32 CPUID )
     U32 sign;
 #endif
     U32 isResume = 0;
-    U32 temp;
 
     CPUID = CPUID;
 
@@ -457,12 +454,12 @@ void BootMain( U32 CPUID )
     *(volatile U32 *)(PHY_BASEADDR_CLKGEN37_MODULE+4) = (U32)0x1C;      // spi0
     *(volatile U32 *)(PHY_BASEADDR_CLKGEN38_MODULE+4) = (U32)0x1C;      // spi1
     *(volatile U32 *)(PHY_BASEADDR_CLKGEN39_MODULE+4) = (U32)0x1C;      // spi2
-#endif
 
 //    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x1 );  // open alive power gate
 //    WriteIO32( &pReg_Alive->PMUNPWRUP,          0x3 );  // mpeg & 3d power down
 //    WriteIO32( &pReg_Alive->PMUNPWRUPPRE,       0x3 );  // mpeg & 3d pre power down
 //    WriteIO32( &pReg_Alive->PMUNISOLATE,        0x0 );  // mpeg & 3d power isolating
+#endif
 
     initClock();
 
@@ -569,6 +566,13 @@ void BootMain( U32 CPUID )
 #endif
 #endif  // #if (CONFIG_SUSPEND_RESUME == 1)
 
+#if 0
+    if(USBREBOOT_SIGNATURE == ReadIO32(&pReg_Alive->ALIVESCRATCHVALUE5))
+    {
+        // TODO
+    }
+#endif
+
     if (pSBI->SIGNATURE != HEADER_ID)
         printf( "2nd Boot Header is invalid, Please check it out!\r\n" );
 
@@ -608,10 +612,12 @@ void BootMain( U32 CPUID )
         printf( "Loading from spi...\r\n" );
         Result = iSPIBOOT(pTBI);        // for SPI boot
         break;
+#if 0
     case BOOT_FROM_NAND:
         printf( "Loading from nand...\r\n" );
         Result = iNANDBOOTEC(pTBI);     // for NAND boot
         break;
+#endif
     case BOOT_FROM_SDMMC:
         printf( "Loading from sdmmc...\r\n" );
         Result = iSDXCBOOT(pTBI);       // for SD boot
@@ -630,7 +636,7 @@ void BootMain( U32 CPUID )
 #endif
 
 #if defined( LOAD_FROM_ALL ) && defined( CHIPID_NXP4330 )
-    #error "Do not support compile option!!!"
+    #error "Does not support compile option!!!"
 #endif
 
 #if 0   // for memory test
@@ -661,12 +667,14 @@ void BootMain( U32 CPUID )
         void (*pLaunch)(U32,U32) = (void(*)(U32,U32))pTBI->LAUNCHADDR;
         printf( " Image Loading Done!\r\n" );
         printf( "Launch to 0x%08X\r\n", (U32)pLaunch );
-        temp = 0x10000000;
-        while(DebugIsBusy() && temp--);
+//        while(!DebugIsTXEmpty());
+//        while(DebugIsBusy());
+        while(!DebugIsUartTxDone());
         pLaunch(0, 4330);
     }
 
     printf( " Image Loading Failure Try to USB boot\r\n" );
-    temp = 0x10000000;
-    while(DebugIsBusy() && temp--);
+    while(!DebugIsUartTxDone());
+//    while(!DebugIsTXEmpty());
+//    while(DebugIsBusy());
 }

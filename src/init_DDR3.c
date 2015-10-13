@@ -151,11 +151,11 @@ void enterSelfRefresh(void)
 #else
     MR.MR1.AL       = pSBI->DII.MR1_AL;
 #endif
-    MR.MR1.ODS1     = pSBI->DDR3_DSInfo.MR1_ODS & (1 << 1);
-    MR.MR1.ODS0     = pSBI->DDR3_DSInfo.MR1_ODS & (1 << 0);
-    MR.MR1.RTT_Nom2 = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 2);
-    MR.MR1.RTT_Nom1 = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 1);
-    MR.MR1.RTT_Nom0 = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 0);
+    MR.MR1.ODS1     = (pSBI->DDR3_DSInfo.MR1_ODS>>1) & 1;
+    MR.MR1.ODS0     = (pSBI->DDR3_DSInfo.MR1_ODS>>0) & 1;
+    MR.MR1.RTT_Nom2 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>2) & 1;
+    MR.MR1.RTT_Nom1 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>1) & 1;
+    MR.MR1.RTT_Nom0 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>0) & 1;
     MR.MR1.QOff     = 0;
     MR.MR1.WL       = 0;
 #if 0
@@ -248,11 +248,11 @@ void exitSelfRefresh(void)
 #else
     MR.MR1.AL       = pSBI->DII.MR1_AL;
 #endif
-    MR.MR1.ODS1     = pSBI->DDR3_DSInfo.MR1_ODS & (1 << 1);
-    MR.MR1.ODS0     = pSBI->DDR3_DSInfo.MR1_ODS & (1 << 0);
-    MR.MR1.RTT_Nom2 = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 2);
-    MR.MR1.RTT_Nom1 = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 1);
-    MR.MR1.RTT_Nom0 = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 0);
+	MR.MR1.ODS1 	= (pSBI->DDR3_DSInfo.MR1_ODS>>1) & 1;
+	MR.MR1.ODS0 	= (pSBI->DDR3_DSInfo.MR1_ODS>>0) & 1;
+	MR.MR1.RTT_Nom2 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>2) & 1;
+	MR.MR1.RTT_Nom1 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>1) & 1;
+	MR.MR1.RTT_Nom0 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>0) & 1;
     MR.MR1.QOff     = 0;
     MR.MR1.WL       = 0;
 #if 0
@@ -1531,17 +1531,25 @@ void init_DDR3(U32 isResume)
 
     // Step 1. reset (Min : 10ns, Typ : 200us)
     ClearIO32( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
-    ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
     DMC_Delay(0x1000);                                          // wait 300ms
     SetIO32  ( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
-    SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
     DMC_Delay(0x1000);                                          // wait 300ms
     ClearIO32( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
-    ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
     DMC_Delay(0x1000);                                          // wait 300ms
     SetIO32  ( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
+//    DMC_Delay(0x10000);                                        // wait 300ms
+
+#if 0
+    ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x1000);                                          // wait 300ms
     SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x1000);                                          // wait 300ms
+    ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+    DMC_Delay(0x1000);                                          // wait 300ms
+    SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+#endif
     DMC_Delay(0x10000);                                        // wait 300ms
+
 
 //    MEMMSG("PHY Version: %X\r\n", ReadIO32(&pReg_DDRPHY->VERSION_INFO));
 
@@ -1673,11 +1681,11 @@ void init_DDR3(U32 isResume)
 #else
     MR1.MR1.AL      = pSBI->DII.MR1_AL;
 #endif
-    MR1.MR1.ODS1        = pSBI->DDR3_DSInfo.MR1_ODS & (1 << 1);
-    MR1.MR1.ODS0        = pSBI->DDR3_DSInfo.MR1_ODS & (1 << 0);
-    MR1.MR1.RTT_Nom2    = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 2);
-    MR1.MR1.RTT_Nom1    = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 1);
-    MR1.MR1.RTT_Nom0    = pSBI->DDR3_DSInfo.MR1_RTT_Nom & (1 << 0);
+	MR1.MR1.ODS1 	= (pSBI->DDR3_DSInfo.MR1_ODS>>1) & 1;
+	MR1.MR1.ODS0 	= (pSBI->DDR3_DSInfo.MR1_ODS>>0) & 1;
+	MR1.MR1.RTT_Nom2 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>2) & 1;
+	MR1.MR1.RTT_Nom1 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>1) & 1;
+	MR1.MR1.RTT_Nom0 = (pSBI->DDR3_DSInfo.MR1_RTT_Nom>>0) & 1;
     MR1.MR1.QOff    = 0;
     MR1.MR1.WL      = 0;
 #if 0

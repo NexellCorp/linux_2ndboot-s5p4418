@@ -68,35 +68,31 @@
 
 #if defined(__SET_GLOBAL_VARIABLES)
 
-struct NX_SecondBootInfo                * const pSBI        = (struct NX_SecondBootInfo   * const)BASEADDR_SRAM;
-struct NX_SecondBootInfo                * const pTBI        = (struct NX_SecondBootInfo   * const)BASEADDR_SRAM;
-struct NX_GPIO_RegisterSet             (* pReg_GPIO)[1]     = (struct NX_GPIO_RegisterSet   (*)[])PHY_BASEADDR_GPIOA_MODULE;
-struct NX_ALIVE_RegisterSet             * pReg_Alive        = (struct NX_ALIVE_RegisterSet      *)PHY_BASEADDR_ALIVE_MODULE;
-struct NX_TIEOFF_RegisterSet            * pReg_Tieoff       = (struct NX_TIEOFF_RegisterSet     *)PHY_BASEADDR_TIEOFF_MODULE;
-struct NX_ECID_RegisterSet              * const pReg_ECID   = (struct NX_ECID_RegisterSet       *)PHY_BASEADDR_ECID_MODULE;
-struct NX_CLKPWR_RegisterSet            * pReg_ClkPwr       = (struct NX_CLKPWR_RegisterSet     *)PHY_BASEADDR_CLKPWR_MODULE;
-struct NX_CLKGEN_RegisterSet            * pReg_UartClkGen   = (struct NX_CLKGEN_RegisterSet     *)PHY_BASEADDR_CLKGEN22_MODULE;
-struct NX_UART_RegisterSet              * pReg_Uart         = (struct NX_UART_RegisterSet       *)PHY_BASEADDR_UART0_MODULE;
-struct NX_RSTCON_RegisterSet            * pReg_RstCon       = (struct NX_RSTCON_RegisterSet     *)PHY_BASEADDR_RSTCON_MODULE;
-struct NX_DREXSDRAM_RegisterSet         * pReg_Drex         = (struct NX_DREXSDRAM_RegisterSet  *)PHY_BASEADDR_DREX_MODULE_CH0_APB;
-struct NX_DDRPHY_RegisterSet            * pReg_DDRPHY       = (struct NX_DDRPHY_RegisterSet     *)PHY_BASEADDR_DREX_MODULE_CH1_APB;
-struct NX_RTC_RegisterSet               * pReg_RTC          = (struct NX_RTC_RegisterSet        *)PHY_BASEADDR_RTC_MODULE;
+struct NX_SecondBootInfo                * const pSBI            = (struct NX_SecondBootInfo         * const)BASEADDR_SRAM;
+struct NX_SecondBootInfo                * const pTBI            = (struct NX_SecondBootInfo         * const)BASEADDR_SRAM;
+struct NX_GPIO_RegisterSet             (* const pReg_GPIO)[1]   = (struct NX_GPIO_RegisterSet   (* const)[])PHY_BASEADDR_GPIOA_MODULE;
+struct NX_ALIVE_RegisterSet             * const pReg_Alive      = (struct NX_ALIVE_RegisterSet      * const)PHY_BASEADDR_ALIVE_MODULE;
+struct NX_TIEOFF_RegisterSet            * const pReg_Tieoff     = (struct NX_TIEOFF_RegisterSet     * const)PHY_BASEADDR_TIEOFF_MODULE;
+struct NX_ECID_RegisterSet              * const pReg_ECID       = (struct NX_ECID_RegisterSet       * const)PHY_BASEADDR_ECID_MODULE;
+struct NX_CLKPWR_RegisterSet            * const pReg_ClkPwr     = (struct NX_CLKPWR_RegisterSet     * const)PHY_BASEADDR_CLKPWR_MODULE;
+struct NX_RSTCON_RegisterSet            * const pReg_RstCon     = (struct NX_RSTCON_RegisterSet     * const)PHY_BASEADDR_RSTCON_MODULE;
+struct NX_DREXSDRAM_RegisterSet         * const pReg_Drex       = (struct NX_DREXSDRAM_RegisterSet  * const)PHY_BASEADDR_DREX_MODULE_CH0_APB;
+struct NX_DDRPHY_RegisterSet            * const pReg_DDRPHY     = (struct NX_DDRPHY_RegisterSet     * const)PHY_BASEADDR_DREX_MODULE_CH1_APB;
+struct NX_RTC_RegisterSet               * const pReg_RTC        = (struct NX_RTC_RegisterSet        * const)PHY_BASEADDR_RTC_MODULE;
 
 #else
 
 extern struct NX_SecondBootInfo         * const pSBI;   // second boot info
 extern struct NX_SecondBootInfo         * const pTBI;   // third boot info
-extern struct NX_GPIO_RegisterSet      (* pReg_GPIO)[1];
-extern struct NX_ALIVE_RegisterSet      * pReg_Alive;
-extern struct NX_TIEOFF_RegisterSet     * pReg_Tieoff;
+extern struct NX_GPIO_RegisterSet      (* const pReg_GPIO)[1];
+extern struct NX_ALIVE_RegisterSet      * const pReg_Alive;
+extern struct NX_TIEOFF_RegisterSet     * const pReg_Tieoff;
 extern struct NX_ECID_RegisterSet       * const pReg_ECID;
-extern struct NX_CLKPWR_RegisterSet     * pReg_ClkPwr;
-extern struct NX_CLKGEN_RegisterSet     * pReg_UartClkGen;
-extern struct NX_UART_RegisterSet       * pReg_Uart;
-extern struct NX_RSTCON_RegisterSet     * pReg_RstCon;
-extern struct NX_DREXSDRAM_RegisterSet  * pReg_Drex;
-extern struct NX_DDRPHY_RegisterSet     * pReg_DDRPHY;
-extern struct NX_RTC_RegisterSet        * pReg_RTC;
+extern struct NX_CLKPWR_RegisterSet     * const pReg_ClkPwr;
+extern struct NX_RSTCON_RegisterSet     * const pReg_RstCon;
+extern struct NX_DREXSDRAM_RegisterSet  * const pReg_Drex;
+extern struct NX_DDRPHY_RegisterSet     * const pReg_DDRPHY;
+extern struct NX_RTC_RegisterSet        * const pReg_RTC;
 
 #endif
 

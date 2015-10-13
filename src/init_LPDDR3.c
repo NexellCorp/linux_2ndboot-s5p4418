@@ -1338,7 +1338,8 @@ void init_LPDDR3(U32 isResume)
     // Set 200Mhz to PLL3.
 #if (CFG_DDR_LOW_FREQ == 1)
 #if defined(MEM_TYPE_LPDDR23)
-    while(DebugIsBusy());
+    while(!DebugIsUartTxDone());
+//    while(DebugIsBusy());
     setMemPLL(0);
 #endif
 #endif
@@ -2157,7 +2158,8 @@ void init_LPDDR3(U32 isResume)
     // Set PLL3.
 #if (CFG_DDR_LOW_FREQ == 1)
 #if defined(MEM_TYPE_LPDDR23)
-    while(DebugIsBusy());
+//    while(DebugIsBusy());
+    while(!DebugIsUartTxDone());
     setMemPLL(1);
 #endif
 #endif

@@ -24,11 +24,11 @@ LDFLAGS		=	-Bstatic							\
 			-Wl,--build-id=none						\
 			-nostdlib
 
-SYS_OBJS	=	startup.o secondboot.o				\
+SYS_OBJS	=	startup.o secondboot.o armv7_libs.o		\
 			resetcon.o GPIO.o CRC32.o			\
 			clockinit.o debug.o util.o buildinfo.o		\
 			printf.o
-SYS_OBJS	+=	sysbus.o armv7_libs.o
+#SYS_OBJS	+=	sysbus.o
 
 ifeq ($(MEMTYPE),DDR3)
 SYS_OBJS	+=	init_DDR3.o
@@ -68,7 +68,7 @@ else ifeq ($(BUILTINALL),y)
 SYS_OBJS	+=	iUSBBOOT.o
 SYS_OBJS	+=	iSPIBOOT.o
 SYS_OBJS	+=	iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o
-SYS_OBJS	+=	iNANDBOOTEC.o
+#SYS_OBJS	+=	iNANDBOOTEC.o
 #SYS_OBJS	+=	iUARTBOOT.o
 endif
 

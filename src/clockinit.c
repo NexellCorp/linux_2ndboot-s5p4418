@@ -304,7 +304,6 @@ extern U32 getremainder(int dividend, int divisor);
 extern struct NX_SecondBootInfo * const pSBI;
 extern void __pllchange(volatile U32 data, volatile U32* addr, U32 delaycount);
 
-struct NX_CLKPWR_RegisterSet * const clkpwr = (struct    NX_CLKPWR_RegisterSet *)PHY_BASEADDR_CLKPWR_MODULE;
 static U32 __g_OSC_KHz;
 
 void NX_CLKPWR_SetOSCFreq( U32 FreqKHz )
@@ -317,8 +316,8 @@ U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber)
     U32 regvalue, regvalue1, nP, nM, nS, nK;
     U32 temp = 0;
 
-    regvalue = clkpwr->PLLSETREG[PllNumber];
-    regvalue1 = clkpwr->PLLSETREG_SSCG[PllNumber];
+    regvalue = pReg_ClkPwr->PLLSETREG[PllNumber];
+    regvalue1 = pReg_ClkPwr->PLLSETREG_SSCG[PllNumber];
     nP = (regvalue >> PLL_P) & 0x3F;
     nM = (regvalue >> PLL_M) & 0x3FF;
     nS = (regvalue >> PLL_S) & 0xFF;
@@ -334,12 +333,12 @@ U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber)
 
 U32 NX_CLKPWR_GetSrcPll(U32 Divider)
 {
-    return clkpwr->DVOREG[Divider] & 0x7;
+    return pReg_ClkPwr->DVOREG[Divider] & 0x7;
 }
 
 U32 NX_CLKPWR_GetDivideValue(U32 Divider)
 {
-    U32 regvalue = clkpwr->DVOREG[Divider];
+    U32 regvalue = pReg_ClkPwr->DVOREG[Divider];
     return ((((regvalue>>DVO3)&0x3F)+1)<<24) | ((((regvalue>>DVO2)&0x3F)+1)<<16) | ((((regvalue>>DVO1)&0x3F)+1)<<8) | ((((regvalue>>DVO0)&0x3F)+1)<<0);
 }
 
@@ -375,15 +374,15 @@ void setMemPLL(int CAafter)
         _GET_PLL23K(50, PLL23_K);
     }
 
-    clkpwr->PLLSETREG[3]        = (U32)((1UL<<28) | PLL_PMS);
-    clkpwr->PLLSETREG_SSCG[3]   = (U32)PLL23_K;
+    pReg_ClkPwr->PLLSETREG[3]        = (U32)((1UL<<28) | PLL_PMS);
+    pReg_ClkPwr->PLLSETREG_SSCG[3]   = (U32)PLL23_K;
 #endif
 
-    __pllchange(clkpwr->PWRMODE | 0x1<<15, &clkpwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+    __pllchange(pReg_ClkPwr->PWRMODE | 0x1<<15, &pReg_ClkPwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
     {
         volatile U32 delay = 0x100000;
-        while((clkpwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
-        if( clkpwr->PWRMODE & 0x1<<15 )
+        while((pReg_ClkPwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( pReg_ClkPwr->PWRMODE & 0x1<<15 )
         {
 //            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
             while(1);        // system reset code need.
@@ -404,70 +403,70 @@ void initClock(void)
 #if (CFG_NSIH_EN == 0)
     // PLL0 for memory
     _GET_PLL01(400, PLL_PMS);
-    clkpwr->PLLSETREG[0] = (U32)PLL_PMS;
+    pReg_ClkPwr->PLLSETREG[0] = (U32)PLL_PMS;
 
     // PLL1 for CPU
     _GET_PLL01(800, PLL_PMS);
-    clkpwr->PLLSETREG[1] = (U32)PLL_PMS;
+    pReg_ClkPwr->PLLSETREG[1] = (U32)PLL_PMS;
 
     // PLL2 for BCLK, 3DCLK
     _GET_PLL23(614, PLL_PMS);
-    clkpwr->PLLSETREG[2] = (U32)PLL_PMS;
+    pReg_ClkPwr->PLLSETREG[2] = (U32)PLL_PMS;
 
     // PLL3 for others (Audio)
     _GET_PLL23(800, PLL_PMS);
-    clkpwr->PLLSETREG[3] = (U32)PLL_PMS;
+    pReg_ClkPwr->PLLSETREG[3] = (U32)PLL_PMS;
 
-    clkpwr->PLLSETREG_SSCG[2] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
-//    clkpwr->PLLSETREG_SSCG[3] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
+    pReg_ClkPwr->PLLSETREG_SSCG[2] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
+//    pReg_ClkPwr->PLLSETREG_SSCG[3] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
 
     // CPUDVOREG
-    clkpwr->DVOREG[0] = (U32)((NX_CLKSRC_PLL_1<<CLKSRC)|    // PLL Select
+    pReg_ClkPwr->DVOREG[0] = (U32)((NX_CLKSRC_PLL_1<<CLKSRC)|    // PLL Select
                             ((1-1)<<DVO0)|                  // FCLK ==> CPU
                             ((4-1)<<DVO1));                 // HCLK ==> CPU bus (max 250MHz)
 
     // BUSDVOREG
-    clkpwr->DVOREG[1] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
+    pReg_ClkPwr->DVOREG[1] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
                             ((2-1)<<DVO0)|                  // BCLK ==> System bus (max 333MHz)
                             ((2-1)<<DVO1));                 // PCLK ==> Peripheral bus (max 166MHz)
 
     // MEMDVOREG
-    clkpwr->DVOREG[2] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
+    pReg_ClkPwr->DVOREG[2] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
                             ((1-1)<<DVO0)|                  // MDCLK ==> Memory DLL (max 800MHz)
                             ((1-1)<<DVO1)|                  // MCLK  ==> Memory DDR (max 800MHz)
                             ((2-1)<<DVO2)|                  // MBCLK ==> MCU bus (max 400MHz)
                             ((2-1)<<DVO3));                 // MPCLK ==> MCU Peripheral bus (max 200MHz)
 
-    clkpwr->DVOREG[3] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // GRP3DVOREG
+    pReg_ClkPwr->DVOREG[3] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // GRP3DVOREG
                             ((2-1)<<DVO0)|                  // GR3DBCLK ==> GPU bus & core (max 333MHz)
                             ((2-1)<<DVO1));                 // GR3DPCLK ==> not used
 
-    clkpwr->DVOREG[4] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // MPEGDVOREG
+    pReg_ClkPwr->DVOREG[4] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // MPEGDVOREG
                             ((2-1)<<DVO0)|                  // MPEGBCLK ==> MPEG bus & core (max 300MHz)
                             ((2-1)<<DVO1));                 // MPEGPCLK ==> MPEG control if (max 150MHz)
 #else
 
-    clkpwr->PLLSETREG[0] = pSBI->PLL[0] | (1UL<<28);
-    clkpwr->PLLSETREG[1] = pSBI->PLL[1] | (1UL<<28);
-    clkpwr->PLLSETREG[2] = pSBI->PLL[2] | (1UL<<28);
-    clkpwr->PLLSETREG[3] = pSBI->PLL[3] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[0] = pSBI->PLL[0] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[1] = pSBI->PLL[1] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[2] = pSBI->PLL[2] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[3] = pSBI->PLL[3] | (1UL<<28);
 
-    clkpwr->PLLSETREG_SSCG[2] = pSBI->PLLSPREAD[0];
-    clkpwr->PLLSETREG_SSCG[3] = pSBI->PLLSPREAD[1];
+    pReg_ClkPwr->PLLSETREG_SSCG[2] = pSBI->PLLSPREAD[0];
+    pReg_ClkPwr->PLLSETREG_SSCG[3] = pSBI->PLLSPREAD[1];
 
-    clkpwr->DVOREG[0] = pSBI->DVO[0];
-    clkpwr->DVOREG[1] = pSBI->DVO[1];
-    clkpwr->DVOREG[2] = pSBI->DVO[2];
-    clkpwr->DVOREG[3] = pSBI->DVO[3];
-    clkpwr->DVOREG[4] = pSBI->DVO[4];
+    pReg_ClkPwr->DVOREG[0] = pSBI->DVO[0];
+    pReg_ClkPwr->DVOREG[1] = pSBI->DVO[1];
+    pReg_ClkPwr->DVOREG[2] = pSBI->DVO[2];
+    pReg_ClkPwr->DVOREG[3] = pSBI->DVO[3];
+    pReg_ClkPwr->DVOREG[4] = pSBI->DVO[4];
 #endif
 
-    __pllchange(clkpwr->PWRMODE | 0x1<<15, &clkpwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+    __pllchange(pReg_ClkPwr->PWRMODE | 0x1<<15, &pReg_ClkPwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
 
     {
         volatile U32 delay = 0x100000;
-        while((clkpwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
-        if( clkpwr->PWRMODE & 0x1<<15 )
+        while((pReg_ClkPwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( pReg_ClkPwr->PWRMODE & 0x1<<15 )
         {
 //            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
             while(1);        // system reset code need.
@@ -485,11 +484,11 @@ void PLLDynamicChange(U32 Freq)
 //			 CLKMODEREG.UPDATE_PLL[0] =1
 //			 while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
 
-	clkpwr->PLLSETREG[CPU_CLKSRC] &= ~(1<<28);	// pll bypass on, xtal clock use
+	pReg_ClkPwr->PLLSETREG[CPU_CLKSRC] &= ~(1<<28);	// pll bypass on, xtal clock use
 
-	clkpwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
+	pReg_ClkPwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
 
-	while(clkpwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
+	while(pReg_ClkPwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
 
 
 
@@ -500,11 +499,11 @@ void PLLDynamicChange(U32 Freq)
 //			while(CLKMODEREG.WAIT_UPDATE_PLL) {  // wait for change update pll; }
 //			for ( 1 usec )  wait for pll power down.
 
-	clkpwr->PLLSETREG[CPU_CLKSRC] = (U32)((1UL<<29)|	// power down
+	pReg_ClkPwr->PLLSETREG[CPU_CLKSRC] = (U32)((1UL<<29)|	// power down
 											(0UL<<28)|	// clock bypass on, xtal clock use
 											(PLL_PMS_800MHZ_S<<PLL_S) | (PLL_PMS_800MHZ_M<<PLL_M) | (PLL_PMS_800MHZ_P<<PLL_P));
-	clkpwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
-	while(clkpwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
+	pReg_ClkPwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
+	while(pReg_ClkPwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
 	DMC_Delay(100);	// 1us
 
 
@@ -514,11 +513,11 @@ void PLLDynamicChange(U32 Freq)
 //			CLKMODEREG.UPDATE_PLL[0] =1
 //			while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
 //			for ( 1000usec ) wait for pll locking.
-	clkpwr->PLLSETREG[CPU_CLKSRC] &= ~((U32)(1UL<<29)); // pll power up
+	pReg_ClkPwr->PLLSETREG[CPU_CLKSRC] &= ~((U32)(1UL<<29)); // pll power up
 
-	clkpwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
+	pReg_ClkPwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
 
-	while(clkpwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
+	while(pReg_ClkPwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
 
 	DMC_Delay(100000);	// 1000us
 
@@ -529,11 +528,11 @@ void PLLDynamicChange(U32 Freq)
 //			 CLKMODEREG.UPDATE_PLL[0] =1
 //			 while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
 
-	clkpwr->PLLSETREG[CPU_CLKSRC] |= (1<<28);	// pll bypass off, pll clock use
+	pReg_ClkPwr->PLLSETREG[CPU_CLKSRC] |= (1<<28);	// pll bypass off, pll clock use
 
-	clkpwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
+	pReg_ClkPwr->CLKMODEREG0 = (1<<CPU_CLKSRC);	// update pll
 
-	while(clkpwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
+	while(pReg_ClkPwr->CLKMODEREG0 & (1<<31));	// wait for change update pll
 }
 #endif
 

@@ -81,6 +81,7 @@
 #define POLY 0x04C11DB7L    //reverse
 
 #define SUSPEND_SIGNATURE       (0x50575200)    /* PWR (ASCII) */
+#define USBREBOOT_SIGNATURE     (0x85836666)
 
 
 #define SDFSBOOT                2

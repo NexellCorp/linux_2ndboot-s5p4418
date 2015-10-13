@@ -22,8 +22,8 @@
 #include <nx_sdmmc.h>
 #include "iSDHCBOOT.h"
 
-#ifdef DEBUG
-#define dprintf(x, ...)	printf(x, ...)
+#ifdef NX_DEBUG
+#define dprintf         printf
 #else
 #define dprintf(x, ...) {}
 #endif
@@ -36,13 +36,13 @@ U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
 
 
 //------------------------------------------------------------------------------
-struct NX_CLKGEN_RegisterSet * const pgSDClkGenReg[3] =
+static struct NX_CLKGEN_RegisterSet * const pgSDClkGenReg[3] =
 {
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN18_MODULE,
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN19_MODULE,
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN20_MODULE
 };
-U32 const SDResetNum[3] =
+static U32 const SDResetNum[3] =
 {
 	RESETINDEX_OF_SDMMC0_MODULE_i_nRST,
 	RESETINDEX_OF_SDMMC1_MODULE_i_nRST,
@@ -721,7 +721,7 @@ CBOOL	NX_SDMMC_Init( SDXCBOOTSTATUS * pSDXCBootStatus )
 
     ret = NX_SDMMC_GetClkParam( &clkInfo );
     if (ret == CFALSE)
-        printf("get clock param faile.\r\n");
+        printf("get clock param fail.\r\n");
 #endif
 
 	// CLKGEN

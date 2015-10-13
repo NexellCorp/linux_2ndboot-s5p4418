@@ -6,17 +6,23 @@ VERINFO				= V061
 ###########################################################################
 # Build Environment
 ###########################################################################
-DEBUG				= n
-
-MEMTYPE				= DDR3
-#MEMTYPE				= LPDDR3
-
-BUILTINALL			= n
-#INITPMIC			= YES
-INITPMIC			= NO
 
 #CHIPNAME			= NXP4330
 CHIPNAME			= S5P4418
+
+DEBUG				= n
+
+MEMTYPE				= DDR3
+#MEMTYPE			= LPDDR3
+
+ifeq ($(CHIPNAME), NXP4330)
+BUILTINALL			= n
+INITPMIC			= NO
+else
+BUILTINALL			= y
+INITPMIC			= YES
+#INITPMIC			= NO
+endif
 
 ifeq ($(BUILTINALL),n)
 #BOOTFROM			= USB
@@ -29,11 +35,14 @@ else ifeq ($(BUILTINALL),y)
 BOOTFROM			= ALL
 endif
 
-#BOARD				= _pyxis
-#BOARD				= _lynx
-#BOARD				= _vtk
-#BOARD				= _drone
-#BOARD				= _svt
+ifeq ($(CHIPNAME), NXP4330)
+BOARD				= LEPUS
+else
+#BOARD				= SVT
+#BOARD				= ASB
+#BOARD				= DRONE
+BOARD				= AVN
+endif
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -48,11 +57,13 @@ endif
 # Top Names
 ###########################################################################
 PROJECT_NAME			= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
-ifeq ($(BUILTINALL),n)
-TARGET_NAME			= $(PROJECT_NAME)$(BOARD)_$(BOOTFROM)
-else ifeq ($(BUILTINALL),y)
-TARGET_NAME			= $(PROJECT_NAME)
+ifeq ($(INITPMIC), YES)
+TARGET_NAME			= $(PROJECT_NAME)_$(BOARD)_$(BOOTFROM)
 endif
+ifeq ($(INITPMIC), NO)
+TARGET_NAME			= $(PROJECT_NAME)_$(BOOTFROM)
+endif
+
 LDS_NAME			= pyrope_2ndboot
 
 
@@ -63,9 +74,9 @@ DIR_PROJECT_TOP			=
 
 DIR_OBJOUTPUT			= obj
 ifeq ($(BUILTINALL),n)
-DIR_TARGETOUTPUT		= build$(BOARD)_$(BOOTFROM)
+DIR_TARGETOUTPUT		= build_$(BOARD)_$(BOOTFROM)
 else ifeq ($(BUILTINALL),y)
-DIR_TARGETOUTPUT		= build$(BOARD)
+DIR_TARGETOUTPUT		= build_$(BOARD)
 endif
 
 CODE_MAIN_INCLUDE		=
@@ -132,4 +143,9 @@ CFLAGS				+=	-g -Wall				\
 					-DMEMTYPE_$(MEMTYPE)			\
 					-DINITPMIC_$(INITPMIC)			\
 					-DCHIPID_$(CHIPNAME)			\
-					-D_2NDBOOT_MODE
+					-D_2NDBOOT_MODE -D$(BOARD)
+
+ifeq ($(INITPMIC), YES)
+CFLAGS				+=	-D$(BOARD)_PMIC_INIT
+endif
+

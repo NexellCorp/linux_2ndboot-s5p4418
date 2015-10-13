@@ -25,7 +25,10 @@
 
 CBOOL   DebugInit( void );
 void    DebugPutch( S8 ch );
-S8      DebugGetch( void );
+//S8      DebugGetch( void );
+CBOOL	DebugIsUartTxDone(void);
+#if 0
+CBOOL	DebugIsTXEmpty(void);
 CBOOL   DebugIsBusy( void );
 
 void    DebugPutString( const S8* const String );
@@ -38,5 +41,5 @@ void    DebugPutWord( S16 value );
 void    DebugPutDWord( S32 value );
 
 //void    DebugPrint( const S8* const FormatString, ... );
-
+#endif
 #endif // __DEBUG_H__

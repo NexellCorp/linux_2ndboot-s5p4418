@@ -45,12 +45,15 @@ struct NX_NANDBootInfo
     U8  tCOS;
     U8  tACC;
     U8  tOCH;
-
+#if 0
+    U32 PageSize    :24;    // 1 byte unit
+    U32 LoadDevice  :8;
+#else
     U8  PageSize;           // 512bytes unit
     U8  TIOffset;           // 3rd boot Image copy Offset. 1MB unit.
     U8  CopyCount;          // 3rd boot image copy count
     U8  LoadDevice;         // device chip select number
-
+#endif
     U32 CRC32;
 };
 
