@@ -11,6 +11,7 @@
 #define DDR_WRITE_LEVELING_EN           (0)
 #define DDR_CA_SWAP_MODE                (0)
 #define DDR_CA_CALIB_EN                 (1)     // for LPDDR3
+#define DDR_CA_AUTO_CALIB               (1)     // for LPDDR3
 #define DDR_GATE_LEVELING_EN            (1)     // for DDR3, great then 667MHz
 #define DDR_READ_DQ_CALIB_EN            (1)
 #define DDR_WRITE_LEVELING_CALIB_EN     (0)     // for Fly-by
@@ -32,6 +33,7 @@
 #define DDR_WRITE_LEVELING_EN           (0)
 #define DDR_CA_SWAP_MODE                (0)
 #define DDR_CA_CALIB_EN                 (1)     // for LPDDR3
+#define DDR_CA_AUTO_CALIB               (1)     // for LPDDR3
 #define DDR_GATE_LEVELING_EN            (1)     // for DDR3, great then 667MHz
 #define DDR_READ_DQ_CALIB_EN            (1)
 #define DDR_WRITE_LEVELING_CALIB_EN     (0)     // for Fly-by
@@ -392,6 +394,7 @@ void DDR_Write_Leveling(void)
 CBOOL DDR_CA_Calibration(void)
 {
     CBOOL   ret = CFALSE;
+#if (DDR_CA_AUTO_CALIB == 1)
     U32     lock_div4 = (g_DDRLock >> 2);
     U32     offsetd;
     U32     vwml, vwmr, vwmc;
@@ -553,6 +556,17 @@ ca_error_ret:
         SendDirectCommand(SDRAM_CMD_MRS, 1, 42, 0xA8);              // CH1 : Send MR42 to exit from CA calibration mode for LPDDR3, MA=0x2A OP=0xA8, 0x50AA0
 #endif
 #endif
+
+#else
+
+    printf("\r\n########## CA Calibration - Start ##########\r\n");
+
+    WriteIO32( &pReg_DDRPHY->PHY_CON[10],   0x37 );                 // Set CA delay time. - Miware value OK
+
+    SetIO32  ( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );      // ctrl_resync[24]=0x1 (HIGH)
+    ClearIO32( &pReg_DDRPHY->PHY_CON[10],   (0x1    <<  24) );      // ctrl_resync[24]=0x0 (LOW)
+    DMC_Delay(0x80);
+#endif  // #if (DDR_CA_AUTO_CALIB == 1)
 
     MEMMSG("\r\n########## CA Calibration - End ##########\r\n");
 
@@ -1361,6 +1375,7 @@ void init_LPDDR3(U32 isResume)
     SetIO32  ( &pReg_RstCon->REGRST[0],     (0x7    <<  26) );
 //    DMC_Delay(0x10000);                                        // wait 300ms
 
+#if 0
     ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
     DMC_Delay(0x1000);                                          // wait 300ms
     SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
@@ -1368,6 +1383,7 @@ void init_LPDDR3(U32 isResume)
     ClearIO32( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
     DMC_Delay(0x1000);                                          // wait 300ms
     SetIO32  ( &pReg_Tieoff->TIEOFFREG[3],  (0x1    <<  31) );
+#endif
     DMC_Delay(0x10000);                                         // wait 300ms
 
 //    MEMMSG("PHY Version: %X\r\n", ReadIO32(&pReg_DDRPHY->VERSION_INFO));

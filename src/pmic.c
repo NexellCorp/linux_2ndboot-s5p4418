@@ -141,11 +141,6 @@ void PMIC_AXP228(void)
     pData[0] = (pData[0] & 0x1F) | DCDC_SYS | DCDC_DDR;
     I2C_Write(I2C_ADDR_AXP228, 0x80, pData, 1);
 
-    // Set bridge DCDC2 and DCDC3
-    I2C_Read(I2C_ADDR_AXP228, 0x37, pData, 1);
-    pData[0] |= 0x10;
-    I2C_Write(I2C_ADDR_AXP228, 0x37, pData, 1);
-
     //
     // ARM voltage change
     //
