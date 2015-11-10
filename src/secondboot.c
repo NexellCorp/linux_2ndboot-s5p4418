@@ -299,6 +299,7 @@ void vddPowerOff( void )
     WriteIO32( &pReg_Alive->VDDOFFCNTVALUESET,  0x00000001 );       //; set minimum delay time for VDDPWRON pin. 1 cycle per 32.768Kh (about 30us)
 
     __asm__ __volatile__ ("cpsid i");                               //; core interrupt off.
+    WriteIO32( &pReg_Alive->VDDCTRLSETREG,      0x000003FC );       //; Retention off (Pad hold off)
     WriteIO32( &pReg_Alive->VDDCTRLRSTREG,      0x00000001 );       //; vddpoweron off, start counting down.
 
     DMC_Delay(600);     // 600 : 110us, Delay for Pending Clear. When CPU clock is 400MHz, this value is minimum delay value.
@@ -356,7 +357,7 @@ void BootMain( U32 CPUID )
 
     CPUID = CPUID;
 
-    DebugInit();
+//    DebugInit();
 
 #if (CONFIG_SUSPEND_RESUME == 1)
     WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
