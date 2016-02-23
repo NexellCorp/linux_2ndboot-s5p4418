@@ -25,18 +25,30 @@ void DMC_Delay(int milisecond);
 #define ARRAY_SIZE(x)               (sizeof(x) / sizeof((x)[0]))
 
 //------------------------------------------------------------------------------
+#define INITPMIC_YES	1			// by.deoks
+
 #if defined( INITPMIC_YES )
 
-//#define DRONE_PMIC_INIT
+#if 0
+/* THINKWARE TEST - by.deoks */
+#define THINKWARE_PMIC_INIT
+#if defined( THINKWARE_PMIC_INIT )
+#define DRONE_PMIC_INIT
+#endif
+#endif
+
+#define DRONE_PMIC_INIT
 //#define AVN_PMIC_INIT
 //#define SVT_PMIC_INIT
 //#define ASB_PMIC_INIT
 
 #define AXP_I2C_GPIO_GRP            (-1)
-#define NXE2000_I2C_GPIO_GRP        (-1)
+//#define NXE2000_I2C_GPIO_GRP        (-1)
+#define NXE2000_I2C_GPIO_GRP        (1)		//by.deoks
+
 
 #if defined( DRONE_PMIC_INIT )
-#if 0
+#if 1
 #undef  NXE2000_I2C_GPIO_GRP
 #define NXE2000_I2C_GPIO_GRP        4   // E group, NXE2000
 #define NXE2000_I2C_SCL             14
@@ -238,7 +250,7 @@ void PMIC_NXE2000(void)
     pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC5_VOL);
     I2C_Write(I2C_ADDR_NXE2000, NXE2000_REG_DC5VOL, pData, 1);
 }
-#endif
+#endif	
 
 void initPMIC(void)
 {

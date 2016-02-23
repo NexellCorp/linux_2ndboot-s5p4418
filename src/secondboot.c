@@ -21,6 +21,8 @@
 
 #include "sysHeader.h"
 
+#define MPTRS  U32
+#define SMEM_TEST	0
 
 #define CPU_BRINGUP_CHECK   (1)
 #if defined(CHIPID_NXP4330)
@@ -344,6 +346,71 @@ void sleepMain( void )
 }
 
 
+#if (SMEM_TEST == 1)
+void SimpleMemoryTest(U32 *pStart, U32 *pEnd)
+{
+    volatile U32 *ptr = pStart;
+
+    printf("memory test start!\r\n");
+
+    printf("\r\nmemory write data to own address\r\n");
+    while(ptr<pEnd)
+    {
+        *ptr = (U32)((MPTRS)ptr);
+        if(((U32)((MPTRS)ptr) & 0x3FFFFFL) == 0)
+            printf("0x%16X:\r\n", ptr);
+        ptr++;
+    }
+
+    printf("\r\nmemory compare with address and own data\r\n");
+    ptr = pStart;
+    while(ptr<pEnd)
+    {
+        if(*ptr != (U32)((MPTRS)ptr))
+            printf("0x%08X: %16x\r\n", (U32)((MPTRS)ptr), *ptr);
+        ptr++;
+        if((((MPTRS)ptr) & 0xFFFFFL) == 0)
+            printf("0x%16X:\r\n", ptr);
+    }
+
+    printf("bit shift test....\r\n");
+    printf("write data....\r\n");
+    ptr = pStart;
+    while(ptr<pEnd)
+    {
+        *ptr = (1UL<<((((MPTRS)ptr) & 0x1F<<2)>>2));
+        ptr++;
+    }
+    printf("compare data....\r\n");
+    ptr = pStart;
+    while(ptr<pEnd)
+    {
+        if(*ptr != (1UL<<((((MPTRS)ptr) & 0x1F<<2)>>2)))
+            printf("0x%16x\r\n", *ptr);
+        ptr++;
+    }
+    printf("reverse bit test\r\n");
+    printf("write data....\r\n");
+    ptr = pStart;
+    while(ptr<pEnd)
+    {
+        *ptr = ~(1UL<<((((MPTRS)ptr) & 0x1F<<2)>>2));
+        ptr++;
+    }
+    printf("compare data....\r\n");
+    ptr = pStart;
+    while(ptr<pEnd)
+    {
+        if(*ptr != ~(1UL<<((((MPTRS)ptr) & 0x1F<<2)>>2)))
+            printf("0x%16x\r\n", *ptr);
+        ptr++;
+    }
+
+    printf("\r\nmemory test done\r\n");
+}
+
+#endif
+
 //------------------------------------------------------------------------------
 void BootMain( U32 CPUID )
 {
@@ -577,6 +644,10 @@ void BootMain( U32 CPUID )
     if (pSBI->SIGNATURE != HEADER_ID)
         printf( "2nd Boot Header is invalid, Please check it out!\r\n" );
 
+#if (SMEM_TEST == 1)
+    SimpleMemoryTest((U32*)0x40000000UL, (U32*)0x50000000UL);
+#endif
+
 #if defined( LOAD_FROM_USB )
     printf( "Loading from usb...\r\n" );
     Result = iUSBBOOT(pTBI);            // for USB boot
@@ -662,7 +733,7 @@ void BootMain( U32 CPUID )
     }
 #endif
 
-
+#if(SMEM_TEST != 1 )
     if(Result)
     {
         void (*pLaunch)(U32,U32) = (void(*)(U32,U32))pTBI->LAUNCHADDR;
@@ -678,4 +749,5 @@ void BootMain( U32 CPUID )
     while(!DebugIsUartTxDone());
 //    while(!DebugIsTXEmpty());
 //    while(DebugIsBusy());
+#endif
 }

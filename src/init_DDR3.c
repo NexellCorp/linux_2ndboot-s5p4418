@@ -27,6 +27,9 @@
 #define DDR_RESET_WRITE_DQ              (1)
 
 #define DDR_RESET_QOS1                  (1)     // Release version is '1'
+#define DDR_READ_DQ_MARGIN_VIEW         (0)
+#define DDR_WRITE_DQ_MARGIN_VIEW        (0)
+
 #endif  // #if defined(CHIPID_NXP4330)
 
 #if defined(CHIPID_S5P4418)
@@ -48,8 +51,8 @@
 
 #define DDR_RESET_QOS1                  (1)     // Release version is '1'
 
-#define DDR_READ_DQ_MARGIN_VIEW         (0)
-#define DDR_WRITE_DQ_MARGIN_VIEW        (0)
+#define DDR_READ_DQ_MARGIN_VIEW         (1)
+#define DDR_WRITE_DQ_MARGIN_VIEW        (1)
 #endif  // #if defined(CHIPID_S5P4418)
 
 
@@ -708,7 +711,7 @@ CBOOL DDR_Gate_Leveling(U32 isResume)
     U32     temp;
     CBOOL   ret = CTRUE;
 
-    MEMMSG("\r\n########## Gate Leveling - Start ##########\r\n");
+//    MEMMSG("\r\n########## Gate Leveling - Start ##########\r\n");
 
     SetIO32  ( &pReg_DDRPHY->PHY_CON[14],   (0xF    <<  0) );               // ctrl_pulld_dqs[3:0] = 0
     SetIO32  ( &pReg_DDRPHY->PHY_CON[0],    (0x1    << 13) );               // byte_rdlvl_en[13]=1
@@ -923,7 +926,7 @@ gate_err_ret:
 #endif  // #if defined(MEM_TYPE_DDR3)
     }
 
-    MEMMSG("\r\n########## Gate Leveling - End ##########\r\n");
+//    MEMMSG("\r\n########## Gate Leveling - End ##########\r\n");
 
     return ret;
 }
@@ -1089,8 +1092,8 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
         WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_RIGHT);
         RDvwmr  = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
 
-        MEMMSG("RDvwml 0x%08x, RDvwmr 0x%08x, RDvwmc 0x%08x\r\n",
-            RDvwml, RDvwmr, g_RDvwmc);
+        //MEMMSG("RDvwml 0x%08x, RDvwmr 0x%08x, RDvwmc 0x%08x\r\n",
+        //    RDvwml, RDvwmr, g_RDvwmc);
 #endif
         //------------------------------------------------------------------------------------------------------------------------
     }
@@ -1386,8 +1389,8 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
         WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_RIGHT);
         WRvwmr  = ReadIO32( &pReg_DDRPHY->PHY_CON[19+1] );
 
-        MEMMSG("WRvwml 0x%08x, WRvwmr 0x%08x, WRvwmc 0x%08x\r\n",
-            WRvwml, WRvwmr, g_WRvwmc);
+        //MEMMSG("WRvwml 0x%08x, WRvwmr 0x%08x, WRvwmc 0x%08x\r\n",
+         //   WRvwml, WRvwmr, g_WRvwmc);
 #endif
         //------------------------------------------------------------------------------------------------------------------------
     }
@@ -1512,6 +1515,129 @@ wr_err_ret:
 }
 #endif  // #if (DDR_WRITE_DQ_CALIB_EN == 1)
 #endif  // #if (DDR_NEW_LEVELING_TRAINING == 1)
+
+/* DDR Lock Value - by.deoks */
+#if 0
+
+struct phy_lock_info
+{
+    U32 val;
+    U32 count;
+    U32 lock_count[5];
+};
+
+U32 g_Lock_Val;
+
+
+void showLockValue(void)
+{
+    struct phy_lock_info lock_info[20];
+    U32 fFound = 0;
+    U32 lock_status, lock_val;
+    U32 temp, i, j;
+
+    for (i = 0; i < 20; i++)
+    {
+        lock_info[i].val        = 0;
+        lock_info[i].count      = 0;
+
+        for (j = 0; j < 5; j++)
+        {
+            lock_info[i].lock_count[j]  = 0;
+        }
+    }
+
+    for (i = 0; i < 1000000; i++)
+    {
+        temp        = ReadIO32( &pReg_DDRPHY->PHY_CON[13] );
+        lock_status = temp & 0x7;
+        lock_val    = (temp >> 8) & 0x1FF;         // read lock value
+
+        fFound = 0;
+
+        for (j = 0; lock_info[j].val != 0; j++)
+        {
+            if (lock_info[j].val == lock_val)
+            {
+                fFound = 1;
+                lock_info[j].count++;
+                if (lock_status)
+                    lock_info[j].lock_count[(lock_status>>1)]++;
+                else
+                    lock_info[j].lock_count[4]++;
+            }
+        }
+
+        if (j == 20)
+            break;
+
+        if (fFound == 0)
+        {
+            lock_info[j].val   = lock_val;
+            lock_info[j].count = 1;
+            if (lock_status)
+                lock_info[j].lock_count[(lock_status>>1)] = 1;
+            else
+                lock_info[j].lock_count[4]  = 1;
+        }
+
+        DMC_Delay(10);
+    }
+	
+#if 1 // Descending Sort - by.deoks
+	struct phy_lock_info* me 
+		= (struct phy_lock_info*)(&lock_info[0]);
+
+	unsigned int array_size = 20, k = 0;
+    for (i = 0; i < array_size; i++)
+    {
+		for( j = 0; j < array_size-1; j++)
+		{
+			int swap = 0;
+			if( (me[j].val != 0) && (me[j+1].val != 0) )
+			{
+				if( me[j].val > me[j+1].val )
+				{
+					swap = me[j].val;
+					me[j].val = me[j+1].val;
+					me[j+1].val = swap;
+
+					swap = me[j].count;
+					me[j].count = me[j+1].count;
+					me[j+1].count = swap;
+
+					for (k = 0; k < 4; k++)
+					{
+						swap = me[j].lock_count[k];
+						me[j].lock_count[k] = me[j+1].lock_count[k];
+						me[j+1].lock_count[k] = swap;			
+					}
+				}	
+			}
+		}
+    }
+#endif	
+
+    printf("\r\n");
+#if 0
+    printf("--------------------------------------\r\n");
+    printf(" Show lock values : %d\r\n", g_DDRLock );
+    printf("--------------------------------------\r\n");
+#endif
+    printf("lock_val,   hit       bad, not bad,   good, better,   best\r\n");
+
+    for (i = 0; lock_info[i].val; i++)
+    {
+        printf("[%6d, %6d] - [%6d", lock_info[i].val, lock_info[i].count, lock_info[i].lock_count[4]);
+
+        for (j = 0; j < 4; j++)
+        {
+            printf(", %6d", lock_info[i].lock_count[j]);
+        }
+        printf("]\r\n");
+    }
+}
+#endif
 
 
 void init_DDR3(U32 isResume)
@@ -2225,7 +2351,7 @@ void init_DDR3(U32 isResume)
 
 
     // Step 24
-//        ClearIO32( &pReg_Drex->DIRECTCMD,           (0x1    <<   8));                   // DLL Reset[8]. 0:No, 1:Reset
+//        ClearIO32( &pReg_Drex->DIRECTCMD,           (0x1    <<   8));                   // 	DLL Reset[8]. 0:No, 1:Reset
 
     // Step 25 :  Send ZQ Init command
     SendDirectCommand(SDRAM_CMD_ZQINIT, 0, (SDRAM_MODE_REG)CNULL, CNULL);
@@ -2261,7 +2387,7 @@ void init_DDR3(U32 isResume)
 
 
 #if 1   //(CONFIG_ODTOFF_GATELEVELINGON)
-    MEMMSG("\r\n########## READ/GATE Level ##########\r\n");
+//    MEMMSG("\r\n########## READ/GATE Level ##########\r\n");
 
 #if (DDR_NEW_LEVELING_TRAINING == 0)
     SetIO32  ( &pReg_DDRPHY->PHY_CON[0],        (0x1    <<   6) );          // ctrl_atgate=1
@@ -2281,10 +2407,11 @@ void init_DDR3(U32 isResume)
     temp |= (0x1 <<  16);
     WriteIO32( &pReg_DDRPHY->PHY_CON[2],        temp);
 
-
+	/* LOCK VALUE - by.deoks  */
+	/*----------------------------------------------------------------------------------------*/
     do {
         SetIO32  ( &pReg_DDRPHY->PHY_CON[12],       (0x1    <<   5) );      // ctrl_dll_on[5]=1
-
+		//showLockValue();	// by.deoks
         do {
             temp = ReadIO32( &pReg_DDRPHY->PHY_CON[13] );                   // read lock value
         } while( (temp & 0x7) != 0x7 );
@@ -2295,6 +2422,7 @@ void init_DDR3(U32 isResume)
     } while( (temp & 0x7) != 0x7 );
 
     g_DDRLock = (temp >> 8) & 0x1FF;
+	/*----------------------------------------------------------------------------------------*/
     lock_div4 = (g_DDRLock >> 2);
 
     temp  = ReadIO32( &pReg_DDRPHY->PHY_CON[12] );
@@ -2461,12 +2589,12 @@ void init_DDR3(U32 isResume)
 #endif
 
     printf("\r\n");
-
+#if 0
     printf("Lock value  = %d\r\n",      g_DDRLock );
 
     printf("GATE CYC    = 0x%08X\r\n",  ReadIO32( &pReg_DDRPHY->PHY_CON[3] ) );
     printf("GATE CODE   = 0x%08X\r\n",  ReadIO32( &pReg_DDRPHY->PHY_CON[8] ) );
-
+#endif
     printf("Read  DQ    = 0x%08X\r\n",  ReadIO32( &pReg_DDRPHY->PHY_CON[4] ) );
     printf("Write DQ    = 0x%08X\r\n",  ReadIO32( &pReg_DDRPHY->PHY_CON[6] ) );
 }
