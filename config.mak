@@ -1,14 +1,14 @@
 ###########################################################################
 # Build Version info
 ###########################################################################
-VERINFO				= V061
+VERINFO				= V062
 
 ###########################################################################
 # Build Environment
 ###########################################################################
 
-#CHIPNAME			= NXP4330
-CHIPNAME			= S5P4418
+CHIPNAME			= NXP4330
+#CHIPNAME			= S5P4418
 
 DEBUG				= n
 
@@ -19,7 +19,7 @@ ifeq ($(CHIPNAME), NXP4330)
 BUILTINALL			= n
 INITPMIC			= NO
 else
-BUILTINALL			= y
+BUILTINALL			= n
 INITPMIC			= YES
 #INITPMIC			= NO
 endif
@@ -27,9 +27,9 @@ endif
 ifeq ($(BUILTINALL),n)
 #BOOTFROM			= USB
 #BOOTFROM			= SPI
-BOOTFROM			= SDMMC
+#BOOTFROM			= SDMMC
 #BOOTFROM			= SDFS
-#BOOTFROM			= NAND
+BOOTFROM			= NAND
 #BOOTFROM			= UART
 else ifeq ($(BUILTINALL),y)
 BOOTFROM			= ALL
