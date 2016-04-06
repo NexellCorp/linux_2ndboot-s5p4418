@@ -7,8 +7,8 @@ VERINFO				= V062
 # Build Environment
 ###########################################################################
 
-CHIPNAME			= NXP4330
-#CHIPNAME			= S5P4418
+#CHIPNAME			= NXP4330
+CHIPNAME			= S5P4418
 
 DEBUG				= n
 
@@ -17,7 +17,7 @@ MEMTYPE				= DDR3
 
 ifeq ($(CHIPNAME), NXP4330)
 BUILTINALL			= n
-INITPMIC			= NO
+INITPMIC			= YES
 else
 BUILTINALL			= n
 INITPMIC			= YES
@@ -27,9 +27,9 @@ endif
 ifeq ($(BUILTINALL),n)
 #BOOTFROM			= USB
 #BOOTFROM			= SPI
-#BOOTFROM			= SDMMC
+BOOTFROM			= SDMMC
 #BOOTFROM			= SDFS
-BOOTFROM			= NAND
+#BOOTFROM			= NAND
 #BOOTFROM			= UART
 else ifeq ($(BUILTINALL),y)
 BOOTFROM			= ALL
