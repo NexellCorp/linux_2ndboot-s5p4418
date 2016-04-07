@@ -23,7 +23,7 @@
 //#include <stdarg.h>
 #include <nx_type.h>
 
-CBOOL   DebugInit( void );
+CBOOL   DebugInit( U32 port );
 void    DebugPutch( S8 ch );
 //S8      DebugGetch( void );
 CBOOL	DebugIsUartTxDone(void);
