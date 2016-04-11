@@ -196,12 +196,13 @@ void PMIC_MP8845(void)
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL2, pData, 1);
 
 #if defined( BF700_PMIC_INIT )
-	pData[0] = 90 | 1<<7;     // 1.2021V
+	pData[0] = 75 | 1<<7;	// 1.1V
+	//pData[0] = 90 | 1<<7;     // 1.2021V
 #endif
 #if defined( AVN_PMIC_INIT )
-	//pData[0] = 75 | 1<<7;	// 1.1V
+	pData[0] = 75 | 1<<7;	// 1.1V
 	//pData[0] = 79 | 1<<7;	// 1.125V
-	pData[0] = 90 | 1 << 7; // 1.2021V
+	//pData[0] = 90 | 1 << 7; // 1.2021V
 #endif
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
 
@@ -224,15 +225,20 @@ void PMIC_MP8845(void)
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
 #endif
 
-	//pData[0] = 0x62 | 1 << 7; // 98: 1.2556V
+	pData[0] = 0x62 | 1 << 7; // 98: 1.2556V
 	//pData[0] = 90 | 1<<7;   // 90: 1.2021 V
 	//pData[0] = 80 | 1<<7;   // 80: 1.135V
-	pData[0] = 75 | 1 << 7; // 75: 1.1V	
+	//pData[0] = 75 | 1 << 7; // 75: 1.1V	
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
 }
 #endif
 
 #if (NXE2000_I2C_GPIO_GRP > -1)
+/************************************************
+ * SVT Board (PMIC: NXE2000)  - Reference 2016.04.05
+ * ARM   : 1.25V
+ * CORE : 1.1V
+ ************************************************/
 void PMIC_NXE2000(void)
 {
 	U8 pData[4];
