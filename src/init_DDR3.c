@@ -12,7 +12,7 @@
 #if defined(CHIPID_NXP4330)
 #define DDR_WRITE_LEVELING_EN           (0)
 #define DDR_CA_CALIB_EN                 (0)     // for LPDDR3
-#define DDR_GATE_LEVELING_EN            (0)     // for DDR3, great then 667MHz
+#define DDR_GATE_LEVELING_EN            (1)     // for DDR3, great then 667MHz
 #define DDR_READ_DQ_CALIB_EN            (1)
 #define DDR_WRITE_LEVELING_CALIB_EN     (0)     // for Fly-by
 #define DDR_WRITE_DQ_CALIB_EN           (1)
