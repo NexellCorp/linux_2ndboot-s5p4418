@@ -424,7 +424,7 @@ void BootMain( U32 CPUID )
 
 	CPUID = CPUID;
 
-#ifdef AVN
+#if defined(AVN) || defined(NAVI)
 	debug_ch = 3;
 #endif
 
