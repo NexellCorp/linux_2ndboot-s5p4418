@@ -9,7 +9,7 @@
  *
  *      Module          : memory
  *      File            : memtester.c
- *      Description     : 
+ *      Description     :
  *      Author          : Deoks
  *      History         : 2016-06-13 Create
  */
@@ -49,25 +49,25 @@ char progress[] = "-\\|/";
 #define ONE 0x00000001L
 
 struct test tests[] = {{"Random Value", test_random_value},
-	{"Compare XOR", test_xor_comparison},
-	{"Compare SUB", test_sub_comparison},
-	{"Compare MUL", test_mul_comparison},
-	{"Compare DIV", test_div_comparison},
-	{"Compare OR", test_or_comparison},
-	{"Compare AND", test_and_comparison},
-	{"Sequential Increment", test_seqinc_comparison},
-	{"Solid Bits", test_solidbits_comparison},
-	{"Block Sequential", test_blockseq_comparison},
-	{"Checkerboard", test_checkerboard_comparison},
-	{"Bit Spread", test_bitspread_comparison},
-	{"Bit Flip", test_bitflip_comparison},
-	{"Walking Ones", test_walkbits1_comparison},
-	{"Walking Zeroes", test_walkbits0_comparison},
+		       {"Compare XOR", test_xor_comparison},
+		       {"Compare SUB", test_sub_comparison},
+		       {"Compare MUL", test_mul_comparison},
+		       {"Compare DIV", test_div_comparison},
+		       {"Compare OR", test_or_comparison},
+		       {"Compare AND", test_and_comparison},
+		       {"Sequential Increment", test_seqinc_comparison},
+		       {"Solid Bits", test_solidbits_comparison},
+		       {"Block Sequential", test_blockseq_comparison},
+		       {"Checkerboard", test_checkerboard_comparison},
+		       {"Bit Spread", test_bitspread_comparison},
+		       {"Bit Flip", test_bitflip_comparison},
+		       {"Walking Ones", test_walkbits1_comparison},
+		       {"Walking Zeroes", test_walkbits0_comparison},
 #ifdef TEST_NARROW_WRITES
-	{"8-bit Writes", test_8bit_wide_random},
-	{"16-bit Writes", test_16bit_wide_random},
+		       {"8-bit Writes", test_8bit_wide_random},
+		       {"16-bit Writes", test_16bit_wide_random},
 #endif
-	{0, 0}};
+		       {0, 0}};
 
 int use_phys = 0;
 long physaddrbase = 0;
