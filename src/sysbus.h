@@ -1,7 +1,23 @@
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : System Bus
+ *      File            : sysbus.h
+ *      Description     : 
+ *      Author          : Hans
+ *      History         : 
+ */
 #ifndef __SYS_BUS_H__
 #define __SYS_BUS_H__
 
-#include "sysHeader.h"
+#include "sysheader.h"
 #if 0
 #include "nx_type.h"
 #include "printf.h"
@@ -61,7 +77,6 @@
 #define NX_DREX_PORT_2_R_BRB_TH_SHFT    (8)
 #define NX_DREX_PORT_1_R_BRB_TH_SHFT    (4)
 #define NX_DREX_PORT_0_R_BRB_TH_SHFT    (0)
-
 
 //------------------------------------------------------------------------------
 //  PL301

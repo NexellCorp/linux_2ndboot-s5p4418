@@ -1,3 +1,20 @@
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : File System
+ *      File            : fatfs.h
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 
+ */
+
 /*---------------------------------------------------------------------------/
 /  FatFs - FAT file system module include file  R0.07a       (C)ChaN, 2009
 /----------------------------------------------------------------------------/
@@ -31,17 +48,12 @@
 /* Maximum sector size to be handled. (512/1024/2048/4096) */
 /* 512 for memroy card and hard disk, 1024 for floppy disk, 2048 for MO disk */
 
-
 /* End of configuration options. Do not change followings without care.     */
 /*--------------------------------------------------------------------------*/
-
-
 
 /* Definitions corresponds to multiple sector size */
 
 #define	SS(fs)	512
-
-
 
 /* File system object structure */
 
@@ -64,8 +76,6 @@ typedef struct _FATFS {
 	U8	win[_MAX_SS];/* Disk access window for Directory/FAT */
 } FATFS;
 
-
-
 /* Directory object structure */
 
 typedef struct _DIR {
@@ -78,8 +88,6 @@ typedef struct _DIR {
 	U8*	dir;		/* Pointer to the current SFN entry in the win[] */
 	U8*	fn;			/* Pointer to the SFN (in/out) {file[8],ext[3],status[1]} */
 } DIR;
-
-
 
 /* File object structure */
 
@@ -95,8 +103,6 @@ typedef struct _FIL {
 	U32	dsect;		/* Current data sector */
 } FIL;
 
-
-
 /* File status structure */
 
 typedef struct _FILINFO {
@@ -107,27 +113,19 @@ typedef struct _FILINFO {
 	char fname[13];		/* Short file name (8.3 format) */
 } FILINFO;
 
-
 /* Character code support macros */
 
 #define IsUpper(c)	(((c)>='A')&&((c)<='Z'))
 #define IsLower(c)	(((c)>='a')&&((c)<='z'))
 #define IsDigit(c)	(((c)>='0')&&((c)<='9'))
 
-
-#define IsDBCS1(c)	0
-#define IsDBCS2(c)	0
-
-
-
+#define IsDBCS1(c) 0
+#define IsDBCS2(c) 0
 
 /* Definitions corresponds to multi partition */
 
-#define LD2PD(drv) (drv)	/* Physical drive# is equal to the logical drive# */
-#define LD2PT(drv) 0		/* Always mounts the 1st partition */
-
-
-
+#define LD2PD(drv) (drv) /* Physical drive# is equal to the logical drive# */
+#define LD2PT(drv) 0     /* Always mounts the 1st partition */
 
 /* File function return code (FRESULT) */
 
@@ -150,8 +148,6 @@ typedef enum {
 	FR_TIMEOUT			/* 15 */
 } FRESULT;
 
-
-
 /*--------------------------------------------------------------*/
 /* FatFs module application interface                           */
 
@@ -160,27 +156,21 @@ FRESULT f_open (FIL*, const char*, U8, FATFS*);		/* Open or create a file */
 FRESULT f_read (FIL*, void*, U32, U32*);			/* Read data from a file */
 FRESULT f_close (FIL*);								/* Close an open file object */
 
-
 /*--------------------------------------------------------------*/
 /* Flags and offset address                                     */
 
-
 /* File access control and file status flags (FIL.flag) */
-
 #define	FA_READ				0x01
 #define	FA_OPEN_EXISTING	0x00
 #define FA__ERROR			0x80
 
-
 /* FAT sub type (FATFS.fs_type) */
-
 #define FS_FAT12	1
 #define FS_FAT16	2
 #define FS_FAT32	3
 
 
 /* File attribute bits for directory entry */
-
 #define	AM_RDO	0x01	/* Read only */
 #define	AM_HID	0x02	/* Hidden */
 #define	AM_SYS	0x04	/* System */
@@ -194,7 +184,6 @@ FRESULT f_close (FIL*);								/* Close an open file object */
 /* FatFs refers the members in the FAT structures with byte offset instead
 / of structure member because there are incompatibility of the packing option
 / between various compilers. */
-
 #define BS_jmpBoot			0
 #define BS_OEMName			3
 #define BPB_BytsPerSec		11
@@ -251,8 +240,6 @@ FRESULT f_close (FIL*);								/* Close an open file object */
 #define	LDIR_Type			12
 #define	LDIR_Chksum			13
 #define	LDIR_FstClusLO		26
-
-
 
 /*--------------------------------*/
 /* Multi-byte word access macros  */

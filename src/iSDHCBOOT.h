@@ -1,22 +1,20 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-//	Copyright (C) 2009 Nexell Co. All Rights Reserved
-//	Nexell Co. Proprietary & Confidential
-//
-//	Nexell informs that this code and information is provided "as is" base
-//	and without warranty of any kind, either expressed or implied, including
-//	but not limited to the implied warranties of merchantability and/or fitness
-//	for a particular puporse.
-//
-//
-//	Module		:
-//	File		:
-//	Description	:
-//	Author		: Hans
-//	History		: 	2013.08.24 hans add port selection, size
-//					2013.02.06 First implementation
-////////////////////////////////////////////////////////////////////////////////
-
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : SDMMC
+ *      File            : iSDHCBOOT.h
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 2013.02.06 First implementation
+ * 			  2013.08.31 rev1 (port 0, 1, 2 selectable)
+ */
 #ifndef __NX_SDHCBOOT_H__
 #define __NX_SDHCBOOT_H__
 

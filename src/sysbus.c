@@ -1,9 +1,24 @@
-#include "sysHeader.h"
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : System Bus
+ *      File            : sysbus.h
+ *      Description     : 
+ *      Author          : Hans
+ *      History         : 
+ */
+ #include "sysheader.h"
 
 #include <nx_drex.h>
 #include <nx_ddrphy.h>
 #include "sysbus.h"
-
 
 /*------------------------------------------------------------------------------
  *      BUS config
@@ -18,7 +33,6 @@
 #define CFG_BUS_RECONFIG_BOTTOMBUSSI        0
 #define CFG_BUS_RECONFIG_BOTTOMBUSQOS       0
 #define CFG_BUS_RECONFIG_DISPBUSSI          1
-
 
 #if (CONFIG_BUS_RECONFIG == 1)
 #if 1
@@ -159,7 +173,7 @@ const u8 g_DispBusSI[3] = {
         DISBUS_SI_SLOT_2ND_DISPLAY  //DISBUS_SI_SLOT_GMAC
 };
 #endif
-#endif  /* #if (CFG_BUS_RECONFIG_ENB == 1) */
+#endif /* #if (CFG_BUS_RECONFIG_ENB == 1) */
 
 void setBusConfig(void)
 {
@@ -167,14 +181,14 @@ void setBusConfig(void)
 	u32 num_si, num_mi;
 	u32 i_slot, temp;
 #if ((CFG_DREX_PORT0_QOS_ENB == 1) || (CFG_DREX_PORT1_QOS_ENB == 1))
-    u32 drex_qos_bits = 0;
+	u32 drex_qos_bits = 0;
 #endif
 
 #if (CFG_DREX_PORT0_QOS_ENB == 1)
-    drex_qos_bits  |= (1<<4) | (1<<0);
+	drex_qos_bits |= (1 << 4) | (1 << 0);
 #endif
 #if (CFG_DREX_PORT1_QOS_ENB == 1)
-    drex_qos_bits  |= (1<<12) | (1<<8);
+	drex_qos_bits |= (1 << 12) | (1 << 8);
 #endif
 
 #if 0
@@ -188,23 +202,22 @@ void setBusConfig(void)
             | ((g_DrexBRB_RD[0] & 0xF) <<    0));
     writel( temp,           &pReg_Drex->BRBRSVCONFIG );
 #endif
-    writel( 0x00000033,     &pReg_Drex->BRBRSVCONTROL );
+	writel(0x00000033, &pReg_Drex->BRBRSVCONTROL);
 
 #if ((CFG_DREX_PORT0_QOS_ENB == 1) || (CFG_DREX_PORT1_QOS_ENB == 1))
 #if (CFG_DREX_PORT0_QOS_ENB == 1)
-    g_DrexQoS[0] = (u16)0x0000;
+	g_DrexQoS[0] = (u16)0x0000;
 #endif
 #if (CFG_DREX_PORT1_QOS_ENB == 1)
-    g_DrexQoS[1] = (u16)0x0000;
+	g_DrexQoS[1] = (u16)0x0000;
 #endif
-    writel( drex_qos_bits,  &pReg_Tieoff->TIEOFFREG[24] );
+	writel(drex_qos_bits, &pReg_Tieoff->TIEOFFREG[24]);
 #else
 #endif
 
 	/* ------------- DREX QoS -------------- */
 	#if 1   //(CFG_BUS_RECONFIG_DREXQOS == 1)
-	for (i_slot = 0; i_slot < 2; i_slot++)
-	{
+	for (i_slot = 0; i_slot < 2; i_slot++) {
 		val = readl(NX_VA_BASE_REG_DREX + NX_DREX_QOS_OFFSET + (i_slot<<3));
 		if (val != g_DrexQoS[i_slot])
 			writel( g_DrexQoS[i_slot], (NX_VA_BASE_REG_DREX + NX_DREX_QOS_OFFSET + (i_slot<<3)) );
@@ -229,8 +242,7 @@ void setBusConfig(void)
 
 	/* Set progamming for AR */
 	// MI0 - Slave Interface
-	for (i_slot = 0; i_slot < num_mi; i_slot++)
-	{
+	for (i_slot = 0; i_slot < num_mi; i_slot++) {
 		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_BOTT_AR );
 		val = readl(NX_BASE_REG_PL301_BOTT_AR);
 		if (val != i_slot)
@@ -238,8 +250,7 @@ void setBusConfig(void)
 	}
 
 	// MI1 - Slave Interface
-	for (i_slot = 0; i_slot < num_si; i_slot++)
-	{
+	for (i_slot = 0; i_slot < num_si; i_slot++) {
 		writel( (0xFF000000 | i_slot),  (NX_BASE_REG_PL301_BOTT_AR + 0x20) );
 		val = readl(NX_BASE_REG_PL301_BOTT_AR + 0x20);
 		if (val != g_BottomBusSI[i_slot])
@@ -248,8 +259,7 @@ void setBusConfig(void)
 
 	/* Set progamming for AW */
 	// MI0 - Slave Interface
-	for (i_slot = 0; i_slot < num_mi; i_slot++)
-	{
+	for (i_slot = 0; i_slot < num_mi; i_slot++) {
 		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_BOTT_AW );
 		val = readl(NX_BASE_REG_PL301_BOTT_AW);
 		if (val != i_slot)
@@ -257,8 +267,7 @@ void setBusConfig(void)
 	}
 
 	// MI1 - Slave Interface
-	for (i_slot = 0; i_slot < num_si; i_slot++)
-	{
+	for (i_slot = 0; i_slot < num_si; i_slot++) {
 		writel( (0xFF000000 | i_slot),  (NX_BASE_REG_PL301_BOTT_AW + 0x20) );
 		val = readl(NX_BASE_REG_PL301_BOTT_AW + 0x20);
 		if (val != g_BottomBusSI[i_slot])
@@ -284,8 +293,7 @@ void setBusConfig(void)
 
 	/* Set progamming for AR */
 	// MI0 - Slave Interface
-	for (i_slot = 0; i_slot < num_mi; i_slot++)
-	{
+	for (i_slot = 0; i_slot < num_mi; i_slot++) {
 		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_TOP_AR );
 		val = readl(NX_BASE_REG_PL301_TOP_AR);
 		if (val != g_TopBusSI[i_slot])
@@ -305,8 +313,7 @@ void setBusConfig(void)
 
 	/* Set progamming for AW */
 	// MI0 - Slave Interface
-	for (i_slot = 0; i_slot < num_mi; i_slot++)
-	{
+	for (i_slot = 0; i_slot < num_mi; i_slot++) {
 		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_TOP_AW );
 		val = readl(NX_BASE_REG_PL301_TOP_AW);
 		if (val != g_TopBusSI[i_slot])
@@ -323,18 +330,17 @@ void setBusConfig(void)
 			writel( (i_slot << SLOT_NUM_POS) | (i_slot << SI_IF_NUM_POS),  (NX_BASE_REG_PL301_TOP_AW + 0x20) );
 	}
 #endif
-	#endif /* (CFG_BUS_RECONFIG_TOPBUSSI == 1) */
+#endif /* (CFG_BUS_RECONFIG_TOPBUSSI == 1) */
 
-	/* ------------- Display BUS ----------- */
-	#if (CFG_BUS_RECONFIG_DISPBUSSI == 1)
+/* ------------- Display BUS ----------- */
+#if (CFG_BUS_RECONFIG_DISPBUSSI == 1)
 	num_si = readl(NX_VA_BASE_REG_PL301_DISP + 0xFC0);
 	num_mi = readl(NX_VA_BASE_REG_PL301_DISP + 0xFC4);
 
 	/* Set progamming for AR */
 	// Slave Interface
-	for (i_slot = 0; i_slot < num_si; i_slot++)
-	{
-		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_DISP_AR);
+	for (i_slot = 0; i_slot < num_si; i_slot++) {
+		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_DISP_AR);
 		val = readl(NX_BASE_REG_PL301_DISP_AR);
 		if (val != g_DispBusSI[i_slot])
 			writel( (i_slot << SLOT_NUM_POS) | (g_DispBusSI[i_slot] << SI_IF_NUM_POS),  NX_BASE_REG_PL301_DISP_AR );
@@ -342,17 +348,16 @@ void setBusConfig(void)
 
 	/* Set progamming for AW */
 	// Slave Interface
-	for (i_slot = 0; i_slot < num_si; i_slot++)
-	{
-		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_DISP_AW);
+	for (i_slot = 0; i_slot < num_si; i_slot++) {
+		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_DISP_AW);
 		val = readl(NX_BASE_REG_PL301_DISP_AW);
 		if (val != g_DispBusSI[i_slot])
 			writel( (i_slot << SLOT_NUM_POS) | (g_DispBusSI[i_slot] << SI_IF_NUM_POS),  NX_BASE_REG_PL301_DISP_AW );
 	}
-	#endif /* (CFG_BUS_RECONFIG_DISPBUSSI == 1) */
+#endif /* (CFG_BUS_RECONFIG_DISPBUSSI == 1) */
 
 	return;
 }
 #endif
 
-#endif  // #if (CONFIG_BUS_RECONFIG == 1)
+#endif // #if (CONFIG_BUS_RECONFIG == 1)

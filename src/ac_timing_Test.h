@@ -1,4 +1,19 @@
-
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : DDR3 Memory Device
+ *      File            : ac_timing_test.h
+ *      Description     :
+ *      Author          : Kook
+ *      History         :
+ */
 // Memory List
 #define 	K4B4G0846B_HCK0		0	//  8bit, 512MByte, Lynx DDR3x4
 #define 	K4B4G1646B_HCMA		1	// 16bit, 512MByte, Cadence, 933MHz
@@ -341,4 +356,3 @@
 #define		tMRD		0x4
 #endif
 #endif
-

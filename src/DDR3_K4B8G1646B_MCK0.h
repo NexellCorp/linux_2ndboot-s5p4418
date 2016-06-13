@@ -1,12 +1,26 @@
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : DDR3 Memory Device
+ *      File            : DDR3_K5B8G1646B_MCK0.h
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 2015-05-21	Hans
+ */
 #ifndef __DDR3_K4B8G1646B_MCK0_H__
 #define __DDR3_K4B8G1646B_MCK0_H__
-
 
 // Clock List
 #define DDR3_533        0
 #define DDR3_666        1
 #define DDR3_800        2
-
 
 // User Define
 //#define MEM_CLK         DDR3_533
@@ -20,7 +34,6 @@
 #define _DDR_ROW_NUM    15
 #define _DDR_COL_NUM    10
 #define _DDR_BANK_NUM   8
-
 
 // Refer to Memory Datasheet
 #define cs_size         (0x40000000>>24)
@@ -180,4 +193,3 @@
                                         // 4:9ck(1.25ns>tCK>1.07ns), 5:10ck(1.07ns>tCK>0.935ns), 6:11ck(0.935ns>tCK>0.833ns), 7:12ck(0.833ns>tCK>0.75ns)
 
 #endif  //#ifndef __DDR3_K4B8G1646B_MCK0_H__
-

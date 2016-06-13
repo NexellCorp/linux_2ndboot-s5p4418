@@ -1,26 +1,24 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-//	Copyright (C) 2009 Nexell Co. All Rights Reserved
-//	Nexell Co. Proprietary & Confidential
-//
-//	Nexell informs that this code and information is provided "as is" base
-//	and without warranty of any kind, either expressed or implied, including
-//	but not limited to the implied warranties of merchantability and/or fitness
-//	for a particular puporse.
-//
-//
-//	Module		: iSPIBOOT.c
-//	File		:
-//	Description	:
-//	Author		: Hans
-//	History		: 2013.01.10 First implementation
-//
-////////////////////////////////////////////////////////////////////////////////
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : SPI
+ *      File            : iSPIBOOT.c
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 2013.01.10 First implementation
+ */
 
-#include "sysHeader.h"
+#include "sysheader.h"
 #include <nx_ssp.h>
 
-#define CFG_WRITE_EN    (0)         // Control write protect
+#define CFG_WRITE_EN (0) // Control write protect
 
 //------------------------------------------------------------------------------
 
@@ -64,75 +62,75 @@ extern U32  NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
 
 #if 1
 typedef struct {
-    U32 nPllNum;
-    U32 nFreqHz;
-    U32 nClkDiv;
-    U32 nClkGenDiv;
+	U32 nPllNum;
+	U32 nFreqHz;
+	U32 nClkDiv;
+	U32 nClkGenDiv;
 } NX_CLKINFO_SPI;
 
-CBOOL   NX_SPI_GetClkParam( NX_CLKINFO_SPI *pClkInfo )
+CBOOL NX_SPI_GetClkParam(NX_CLKINFO_SPI *pClkInfo)
 {
-    U32 srcFreq;
-    U32 nRetry = 1, nTemp = 0;
-    CBOOL   fRet = CFALSE;
+	U32 srcFreq;
+	U32 nRetry = 1, nTemp = 0;
+	CBOOL fRet = CFALSE;
 
-    srcFreq = NX_CLKPWR_GetPLLFrequency(pClkInfo->nPllNum);
+	srcFreq = NX_CLKPWR_GetPLLFrequency(pClkInfo->nPllNum);
 
 retry_getparam:
-    for (pClkInfo->nClkDiv = 1; ; pClkInfo->nClkDiv ++)
-    {
-        nTemp   = (pClkInfo->nFreqHz * pClkInfo->nClkDiv);
-        pClkInfo->nClkGenDiv  = getquotient(srcFreq, nTemp);      // (srcFreq / nTemp)
+	for (pClkInfo->nClkDiv = 1; ; pClkInfo->nClkDiv ++) {
+		nTemp   = (pClkInfo->nFreqHz * pClkInfo->nClkDiv);
+		pClkInfo->nClkGenDiv  = getquotient(srcFreq, nTemp);      // (srcFreq / nTemp)
 
-        if (srcFreq > (pClkInfo->nFreqHz * pClkInfo->nClkDiv))
-            pClkInfo->nClkGenDiv++;
+		if (srcFreq > (pClkInfo->nFreqHz * pClkInfo->nClkDiv))
+			pClkInfo->nClkGenDiv++;
 
-        if (pClkInfo->nClkGenDiv < 255)
-            break;
-    }
+		if (pClkInfo->nClkGenDiv < 255)
+			break;
+	}
 
-    nTemp = getquotient(srcFreq, (pClkInfo->nClkGenDiv * pClkInfo->nClkDiv));
-    if (nTemp <= pClkInfo->nFreqHz)
-    {
-        fRet = CTRUE;
-        goto exit_getparam;
-    }
+	nTemp = getquotient(srcFreq, (pClkInfo->nClkGenDiv * pClkInfo->nClkDiv));
+	if (nTemp <= pClkInfo->nFreqHz) {
+		fRet = CTRUE;
+		goto exit_getparam;
+	}
 
-    if (nRetry)
-    {
-        nRetry--;
-        goto retry_getparam;
-    }
+	if (nRetry) {
+		nRetry--;
+		goto retry_getparam;
+	}
 
 exit_getparam:
 #if 0
-    if (nRetry)
-        printf("getClk = %d\r\n", nTemp);
+	if (nRetry)
+		printf("getClk = %d\r\n", nTemp);
 #endif
 
-    return fRet;
+	return fRet;
 }
 #endif
 
-
 //------------------------------------------------------------------------------
-static struct NX_CLKGEN_RegisterSet * const pSSPClkGenReg = (struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN37_MODULE;
-static struct NX_SSP_RegisterSet * const pSSPSPIReg = (struct NX_SSP_RegisterSet *)PHY_BASEADDR_SSP0_MODULE;
+static struct NX_CLKGEN_RegisterSet *const pSSPClkGenReg =
+(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN37_MODULE;
+static struct NX_SSP_RegisterSet *const pSSPSPIReg =
+(struct NX_SSP_RegisterSet *)PHY_BASEADDR_SSP0_MODULE;
 
 void SPI_Init(void)
 {
-    register struct NX_GPIO_RegisterSet * pGPIOxRegC = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
-    register struct NX_GPIO_RegisterSet * pGPIOxRegD = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_D];
+	register struct NX_GPIO_RegisterSet *pGPIOxRegC =
+		(struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
+	register struct NX_GPIO_RegisterSet *pGPIOxRegD =
+		(struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_D];
 #if 1
-    NX_CLKINFO_SPI clkInfo;
-    CBOOL ret;
+	NX_CLKINFO_SPI clkInfo;
+	CBOOL ret;
 
-    clkInfo.nPllNum = NX_CLKSRC_SPI;
-    clkInfo.nFreqHz = 40000000;
+	clkInfo.nPllNum = NX_CLKSRC_SPI;
+	clkInfo.nFreqHz = 40000000;
 
-    ret = NX_SPI_GetClkParam( &clkInfo );
-    if (ret == CFALSE)
-        printf("get clock param faile.\r\n");
+	ret = NX_SPI_GetClkParam(&clkInfo);
+	if (ret == CFALSE)
+		printf("get clock param faile.\r\n");
 #endif
 
 #if (CFG_WRITE_EN == 1)
@@ -143,27 +141,27 @@ void SPI_Init(void)
 	pGPIOxRegD->GPIOxALTFN[0] = (pGPIOxRegD->GPIOxALTFN[0] & ~0x00000003) | 0x00000001; // GPIO D[0] ALT1
 
 #if 1
-    pGPIOxRegC->GPIOx_SLEW                      &= ~(1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_SLEW_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_DRV0                      |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_DRV0_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_DRV1                      |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_DRV1_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_PULLSEL                   |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_PULLSEL_DISABLE_DEFAULT   |=  (1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_PULLENB                   &= ~(1<<31 | 1<<30 | 1<<29);
-    pGPIOxRegC->GPIOx_PULLENB_DISABLE_DEFAULT   |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_SLEW                      &= ~(1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_SLEW_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_DRV0                      |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_DRV0_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_DRV1                      |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_DRV1_DISABLE_DEFAULT      |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_PULLSEL                   |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_PULLSEL_DISABLE_DEFAULT   |=  (1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_PULLENB                   &= ~(1<<31 | 1<<30 | 1<<29);
+	pGPIOxRegC->GPIOx_PULLENB_DISABLE_DEFAULT   |=  (1<<31 | 1<<30 | 1<<29);
 
-    pGPIOxRegD->GPIOx_SLEW                      &= ~(1<<0);
-    pGPIOxRegD->GPIOx_SLEW_DISABLE_DEFAULT      |=  (1<<0);
-    pGPIOxRegD->GPIOx_DRV0                      |=  (1<<0);
-    pGPIOxRegD->GPIOx_DRV0_DISABLE_DEFAULT      |=  (1<<0);
-    pGPIOxRegD->GPIOx_DRV1                      |=  (1<<0);
-    pGPIOxRegD->GPIOx_DRV1_DISABLE_DEFAULT      |=  (1<<0);
-    pGPIOxRegD->GPIOx_PULLSEL                   |=  (1<<0);
-    pGPIOxRegD->GPIOx_PULLSEL_DISABLE_DEFAULT   |=  (1<<0);
-    pGPIOxRegD->GPIOx_PULLENB                   &= ~(1<<0);
-    pGPIOxRegD->GPIOx_PULLENB_DISABLE_DEFAULT   |=  (1<<0);
+	pGPIOxRegD->GPIOx_SLEW                      &= ~(1<<0);
+	pGPIOxRegD->GPIOx_SLEW_DISABLE_DEFAULT      |=  (1<<0);
+	pGPIOxRegD->GPIOx_DRV0                      |=  (1<<0);
+	pGPIOxRegD->GPIOx_DRV0_DISABLE_DEFAULT      |=  (1<<0);
+	pGPIOxRegD->GPIOx_DRV1                      |=  (1<<0);
+	pGPIOxRegD->GPIOx_DRV1_DISABLE_DEFAULT      |=  (1<<0);
+	pGPIOxRegD->GPIOx_PULLSEL                   |=  (1<<0);
+	pGPIOxRegD->GPIOx_PULLSEL_DISABLE_DEFAULT   |=  (1<<0);
+	pGPIOxRegD->GPIOx_PULLENB                   &= ~(1<<0);
+	pGPIOxRegD->GPIOx_PULLENB_DISABLE_DEFAULT   |=  (1<<0);
 #endif
 
 	ResetCon(RESETINDEX_OF_SSP0_MODULE_PRESETn, CFALSE);	// reset negate
@@ -210,8 +208,8 @@ void SPI_Init(void)
 
 void SPI_Deinit(void)
 {
-    register struct NX_GPIO_RegisterSet * pGPIOxRegC = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
-    register struct NX_GPIO_RegisterSet * pGPIOxRegD = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_D];
+	register struct NX_GPIO_RegisterSet * pGPIOxRegC = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
+	register struct NX_GPIO_RegisterSet * pGPIOxRegD = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_D];
 
 	pSSPSPIReg->SSPCR1     &= ~(0x1<<1);		// SPI Stop
 
@@ -232,13 +230,14 @@ void SPI_Deinit(void)
 	pGPIOxRegD->GPIOxALTFN[0]   &= ~0x00000003; // GPIO D[0] ALT0
 }
 
-U32	SPI_EEPROMRead( U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U32 fcs )
+U32 SPI_EEPROMRead(U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U32 fcs)
 {
-	register U8 *pdwBuffer = (U8*)DDRBase;
-	register U32	iRxSize=0;
-	register struct NX_GPIO_RegisterSet * pGPIOxReg = (struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
+	register U8 *pdwBuffer = (U8 *)DDRBase;
+	register U32 iRxSize = 0;
+	register struct NX_GPIO_RegisterSet *pGPIOxReg =
+		(struct NX_GPIO_RegisterSet *)&pReg_GPIO[GPIO_GROUP_C];
 
-//	printf("SPI Flash Address: 0x%08X\r\n", FlashBase );
+	//	printf("SPI Flash Address: 0x%08X\r\n", FlashBase );
 
 	pGPIOxReg->GPIOxOUT         |=   0x40000000;    // gpio c 30 frm is gpio mode and output high first;
 	pGPIOxReg->GPIOxOUTENB      |=   0x40000000;    // gpio c 30 frm is gpio mode and out mode;
@@ -268,13 +267,13 @@ U32	SPI_EEPROMRead( U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U
 	while(pSSPSPIReg->SSPSR & 0x1<<2)		// while RX fifo is not empty
 		pSSPSPIReg->SSPDR;					// discard RX data cmd & address
 
-	pSSPSPIReg->SSPDR = 0xAA;				// send dummy data for receive read data.
-	pSSPSPIReg->SSPDR = 0xAA;				// send dummy data for receive read data.
-	pSSPSPIReg->SSPDR = 0xAA;				// send dummy data for receive read data.
-	pSSPSPIReg->SSPDR = 0xAA;				// send dummy data for receive read data.
-	while(!(pSSPSPIReg->SSPSR & 0x1<<2));	// wait RX fifo is not empty
+	pSSPSPIReg->SSPDR = 0xAA; // send dummy data for receive read data.
+	pSSPSPIReg->SSPDR = 0xAA; // send dummy data for receive read data.
+	pSSPSPIReg->SSPDR = 0xAA; // send dummy data for receive read data.
+	pSSPSPIReg->SSPDR = 0xAA; // send dummy data for receive read data.
+	while (!(pSSPSPIReg->SSPSR & 0x1 << 2)); // wait RX fifo is not empty
 
-	while( Size > iRxSize ) // 4 is for crc32 fcs
+	while (Size > iRxSize) // 4 is for crc32 fcs
 	{
 		register U8 tmpdata;
 		pSSPSPIReg->SSPDR = 0xAA;			// send dummy data for receive read data.
@@ -291,16 +290,16 @@ U32	SPI_EEPROMRead( U32 FlashBase, U32 *DDRBase, U32 Size, U32 FlashAddrCount, U
 	while(pSSPSPIReg->SSPSR & 0x1<<2)		// while RX fifo is not empty
 		pSSPSPIReg->SSPDR;					// RX data read
 
-	pSSPSPIReg->SSPCR1 &= ~(0x1<<1);			// SPI Stop
+	pSSPSPIReg->SSPCR1 &= ~(0x1 << 1); // SPI Stop
 
 	pGPIOxReg->GPIOxOUT |= 0x40000000;			// gpio c 30 frm is gpio mode and output high;
 
-	printf("SPI Read completed!\r\n" );
+	printf("SPI Read completed!\r\n");
 
 	return fcs;
 }
 
-#if 0   //(CFG_WRITE_EN == 1)
+#if 0 //(CFG_WRITE_EN == 1)
 void SPI_EEPROM_WriteEnable(void)
 {
 	pSSPSPIReg->SSPDR = SER_WREN;			// write enable command
@@ -389,7 +388,7 @@ U32 SPI_EEPROM_PageWrite(U32 FlashAddr, U8 *pDataAddr, U32 FlashAddrCount, U32 F
 	pSSPSPIReg->SSPCR1 |= 0x1<<1;			// spi start (cs will be low)
 	while(FlashPageSize >0)
 	{
-//		if(pSSPSPIReg->SSPSR & 0x1<<SSPFIFOSTATUS_TNF)
+		//		if(pSSPSPIReg->SSPSR & 0x1<<SSPFIFOSTATUS_TNF)
 		if(pSSPSPIReg->SSPSR & 0x1<<SSPFIFOSTATUS_RNE)	// if RX fifo is not empty
 		{
 			register U8 tmpdata = *pDataAddr++;
@@ -454,62 +453,56 @@ CBOOL SPI_EEPROMWrite(U32 FlashAddr, U32 *DataAddr, S32 Size)
 }
 #endif
 
-CBOOL iSPIBOOT(struct NX_SecondBootInfo * pTBI)
+CBOOL iSPIBOOT(struct NX_SecondBootInfo *pTBI)
 {
 	U32 FlashAddr, *fcsdata;
 	U8 *DataAddr;
 	S32 DataSize;
 	U32 fcs = 0;
 
-	printf("SPI Device Read Address: 0x%08X\r\nSPI address step   : 0x%08X\r\n", pSBI->DEVICEADDR, pSBI->DBI.SPIBI.AddrStep);
-
+	printf("SPI Device Read Address: 0x%08X\r\nSPI address step   : 0x%08X\r\n",
+			pSBI->DEVICEADDR, pSBI->DBI.SPIBI.AddrStep);
 
 	FlashAddr = pSBI->DEVICEADDR;
 
 	SPI_Init();
 
-//	fcs = SPI_EEPROMWrite(FlashAddr, (U32*)pSBI->LOADADDR, pSBI->LOADSIZE);
+	//	fcs = SPI_EEPROMWrite(FlashAddr, (U32*)pSBI->LOADADDR, pSBI->LOADSIZE);
 
-	SPI_EEPROMRead(FlashAddr, (U32*)pTBI, sizeof(struct NX_SecondBootInfo), pSBI->DBI.SPIBI.AddrStep, 0);	// get NSIH
+	SPI_EEPROMRead(FlashAddr, (U32 *)pTBI, sizeof(struct NX_SecondBootInfo),
+			pSBI->DBI.SPIBI.AddrStep, 0); // get NSIH
 
-
-	if(pTBI->SIGNATURE != HEADER_ID)
-	{
+	if (pTBI->SIGNATURE != HEADER_ID) {
 		printf("3rd boot Signature is wrong! SPI boot failure\r\n");
 		fcs = 1;
 		goto spifailure;
 	}
 
-	DataAddr = (U8*)pTBI->LOADADDR;
+	DataAddr = (U8 *)pTBI->LOADADDR;
 	DataSize = (U32)pTBI->LOADSIZE;
 
-	printf("SPI 3rd boot Load Address: 0x%08X\r\n", (U32)DataAddr );
-	printf("SPI Load Size   : 0x%08X\r\n", DataSize );
-	printf("CRC   : 0x%08X\r\n", pTBI->DBI.SPIBI.CRC32 );
-
+	printf("SPI 3rd boot Load Address: 0x%08X\r\n", (U32)DataAddr);
+	printf("SPI Load Size   : 0x%08X\r\n", DataSize);
+	printf("CRC   : 0x%08X\r\n", pTBI->DBI.SPIBI.CRC32);
 
 	FlashAddr += sizeof(struct NX_SecondBootInfo);
 
-	fcs = SPI_EEPROMRead(FlashAddr, (U32*)DataAddr, DataSize, pSBI->DBI.SPIBI.AddrStep, 0);
+	fcs = SPI_EEPROMRead(FlashAddr, (U32 *)DataAddr, DataSize,
+			pSBI->DBI.SPIBI.AddrStep, 0);
 
 	// if all data are zero, then crc result is zero.
-	fcsdata = (U32*)DataAddr;
+	fcsdata = (U32 *)DataAddr;
 
-	while(DataSize > 0)
-	{
-		if(*fcsdata++ != 0)
+	while (DataSize > 0) {
+		if (*fcsdata++ != 0)
 			break;
 		DataSize -= 4;
 	}
 
-
-	if(fcs != pTBI->DBI.SPIBI.CRC32)
-	{
+	if (fcs != pTBI->DBI.SPIBI.CRC32) {
 		printf("fcs check failure. generated crc is 0x%08X\r\n", fcs);
 		fcs = 1;
-	}else
-	if(DataSize)
-	{
+	} else if (DataSize) {
 		printf("SPI 3rd boot image load success!\r\n");
 		fcs = 0;
 	}

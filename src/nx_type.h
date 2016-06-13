@@ -1,23 +1,22 @@
-//------------------------------------------------------------------------------
-//
-//	Copyright (C) 2009 Nexell Co. All Rights Reserved
-//	Nexell Co. Proprietary & Confidential
-//
-//	NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
-//	AND	WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
-//	BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
-//	FOR A PARTICULAR PURPOSE.
-//
-//	Module		: base
-//	File		: nx_type.h
-//	Description	: support base type
-//	Author		: Goofy
-//	Export		:
-//	History		:
-//		2007.04.04	Goofy	First draft
-//------------------------------------------------------------------------------
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : Base
+ *      File            : nx_type.h
+ *      Description     :
+ *      Author          : Goofy
+ *      History         : 2010.04.27	Hans
+ *			  2007.04.04	Goofy	First draft
+ */
 #ifndef __NX_TYPE_H__
-#define	__NX_TYPE_H__
+#define __NX_TYPE_H__
 
 //------------------------------------------------------------------------------
 /// @name Basic data types

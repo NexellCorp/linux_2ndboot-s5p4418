@@ -1,8 +1,23 @@
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : Base
+ *      File            : nx_reg_base.h
+ *      Description     :
+ *      Author          : 
+ *      History         :
+ */
 #ifndef __NX_REG_BASE_H__
 #define __NX_REG_BASE_H__
 
 #include "nx_type.h"
-
 
 //*****************************************************************************
 // MCUA Control Register
@@ -218,4 +233,3 @@ typedef struct {
 
 
 #endif  // #ifndef __NX_REG_BASE_H__
-

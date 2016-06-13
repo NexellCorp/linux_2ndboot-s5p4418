@@ -1,3 +1,18 @@
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : memory
+ *      File            : memtester.h
+ *      Description     : 
+ *      Author          : Deoks
+ *      History         : 2016-06-13 Create
+ */
 /*
  * Very simple yet very effective memory tester.
  * Originally by Simon Kirby <sim@stormix.com> <sim@neato.org>
@@ -16,24 +31,24 @@
 
 /* Baic Sizes */                                                                
 static unsigned int y = 1U;                                                     
-                                                                                
+
 unsigned int rand_r(unsigned int *seedp)                                        
 {                                                                                  
-    *seedp ^= (*seedp << 13);                                                      
-    *seedp ^= (*seedp >> 17);                                                      
-    *seedp ^= (*seedp << 5);                                                       
-                                                                               
-    return *seedp;                                                                 
+	*seedp ^= (*seedp << 13);                                                      
+	*seedp ^= (*seedp >> 17);                                                      
+	*seedp ^= (*seedp << 5);                                                       
+
+	return *seedp;                                                                 
 }                                                                                  
-                                                                                   
+
 unsigned int rand(void)                                                            
 {                        
-    return rand_r(&y);                                                             
+	return rand_r(&y);                                                             
 }                                                                                  
-                                                                                   
+
 void srand(unsigned int seed)                                                      
 {                                                                                  
-    y = seed;                                                                      
+	y = seed;                                                                      
 }                                                                               
 #if 0                                                                                 
 #define rand32() ((unsigned int) rand() | ( (unsigned int) rand() << 16))          
@@ -51,27 +66,27 @@ unsigned int rand_ul(void)
 #define CHECKERBOARD1 0x55555555                                                   
 #define CHECKERBOARD2 0xaaaaaaaa                                                   
 #define UL_BYTE(x) ((x | x << 8 | x << 16 | x << 24))                           
-                                                                                
+
 /* Basic Types  */                                                              
 typedef unsigned long ul;                                                          
 typedef unsigned long long ull;                                                    
 typedef unsigned long volatile ulv;                                                
 typedef unsigned char volatile u8v;                                                
 typedef unsigned short volatile u16v;                                              
-                                                                                   
+
 struct test {                                                                      
-    char *name;                                                                    
-    int (*fp)(ulv*, ulv*, int);                                                                   
+	char *name;                                                                    
+	int (*fp)(ulv*, ulv*, int);                                                                   
 };                                                                                 
-                                                                                   
+
 union {                                                                            
-    unsigned char bytes[UL_LEN/8];                                                 
-    ul val;                                                                        
+	unsigned char bytes[UL_LEN/8];                                                 
+	ul val;                                                                        
 } mword8;                                                                          
-                                                                                   
+
 union {                                                                            
-    unsigned short u16s[UL_LEN/16];                                                
-    ul val;                                                                        
+	unsigned short u16s[UL_LEN/16];                                                
+	ul val;                                                                        
 } mword16;
 
 #define TEST_NARROW_WRITES

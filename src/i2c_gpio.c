@@ -1,25 +1,25 @@
-//------------------------------------------------------------------------------
-//
-//  Copyright (C) 2009 Nexell Co., All Rights Reserved
-//  Nexell Co. Proprietary & Confidential
-//
-//  NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
-//  AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
-//  BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
-//  FOR A PARTICULAR PURPOSE.
-//
-//  Module     : I2C GPIO
-//  File       : nx_i2c_gpio.c
-//  Description:
-//  Author     : Firmware Team
-//  History    : 2014.11.21 hans
-//				hans 2015.03.13 change to no use prototype
-//------------------------------------------------------------------------------
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : I2C (GPIO)
+ *      File            : i2c_gpio.c
+ *      Description     :
+ *      Author          : Firmware Team
+ *      History         : 2014.11.21 hans
+ *			  hans 2015.03.13 change to no use prototype
+ */
 #include <nx_type.h>
 #include <nx_gpio.h>
-#include "sysHeader.h"
+#include "sysheader.h"
 
-#define I2C_GPIO_DEBUG	0
+#define I2C_GPIO_DEBUG 0
 
 //#define dprintf printf
 #define dprintf(x)
@@ -37,19 +37,19 @@ static U8 g_I2C_GPIO_SDA;
 
 static inline void I2CDELAY(U32 us)
 {
-    volatile U32 i = 0, j = 0;
-    for(i = 0; i < us * 2; i++)
-        for(j = 0; j < 5; j++);
+	volatile U32 i = 0, j = 0;
+	for (i = 0; i < us * 2; i++)
+		for (j = 0; j < 5; j++);
 }
 
 static void SDA_LOW(void)
 {
-	SetIO32( &pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxOUTENB,   (1<<g_I2C_GPIO_SDA) );
+	SetIO32(&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxOUTENB, (1 << g_I2C_GPIO_SDA));
 }
 
 static void SCL_LOW(void)
 {
-	SetIO32( &pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxOUTENB,   (1<<g_I2C_GPIO_SCL) );
+	SetIO32(&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxOUTENB, (1 << g_I2C_GPIO_SCL));
 }
 
 static CBOOL SDA_READ(void)
@@ -70,13 +70,13 @@ static CBOOL SCL_READ(void)
 	return (CBOOL)((ReadIO32( &pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxPAD) >> g_I2C_GPIO_SCL) & 1);
 }
 
-void I2C_Init( U8 gpioGRP, U8 gpioSCL, U8 gpioSDA )
+void I2C_Init(U8 gpioGRP, U8 gpioSCL, U8 gpioSDA, U32 gpioSCLAlt, U32 gpioSDAAlt)
 {
 	started = CFALSE;
 
-    g_I2C_GPIO_GRP = gpioGRP;
-    g_I2C_GPIO_SCL = gpioSCL;
-    g_I2C_GPIO_SDA = gpioSDA;
+	g_I2C_GPIO_GRP = gpioGRP;
+	g_I2C_GPIO_SCL = gpioSCL;
+	g_I2C_GPIO_SDA = gpioSDA;
 
 //	printf("I2C_Init\r\n");
 	ClearIO32(&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxOUT,         (1<<g_I2C_GPIO_SCL) );  // low
@@ -88,10 +88,10 @@ void I2C_Init( U8 gpioGRP, U8 gpioSCL, U8 gpioSDA )
 	ChangeIO32(&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SDA>>4], 3<<((g_I2C_GPIO_SDA&0xF)<<1), NX_GPIO_PADFUNC_0<<((g_I2C_GPIO_SDA&0xF)<<1));	// to gpio
 #else
     ClearIO32(&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SCL>>4], NX_GPIO_PADFUNC_3<<((g_I2C_GPIO_SCL&0xF)<<1));
-    SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SCL>>4], NX_GPIO_PADFUNC_0<<((g_I2C_GPIO_SCL&0xF)<<1));
+    SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SCL>>4], gpioSCLAlt<<((g_I2C_GPIO_SCL&0xF)<<1));
 
     ClearIO32(&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SDA>>4], NX_GPIO_PADFUNC_3<<((g_I2C_GPIO_SDA&0xF)<<1));
-    SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SDA>>4], NX_GPIO_PADFUNC_0<<((g_I2C_GPIO_SDA&0xF)<<1));
+    SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOxALTFN[g_I2C_GPIO_SDA>>4], gpioSDAAlt<<((g_I2C_GPIO_SDA&0xF)<<1));
 #endif
 	SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOx_PULLSEL,    (1<<g_I2C_GPIO_SDA) );  // pullup
 	SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOx_PULLENB,    (1<<g_I2C_GPIO_SDA) );  // pull enable
@@ -99,7 +99,7 @@ void I2C_Init( U8 gpioGRP, U8 gpioSCL, U8 gpioSDA )
 	SetIO32  (&pReg_GPIO[g_I2C_GPIO_GRP]->GPIOx_PULLENB,    (1<<g_I2C_GPIO_SCL) );  // pull enable
 }
 
-#if 0
+#if 1
 void I2C_Deinit( void )
 {
 //	printf("I2C_Deinit\r\n");
@@ -127,16 +127,14 @@ void I2C_Deinit( void )
 static CBOOL I2C_Start(void)
 {
 	U32 timeout = STRETCHING_TIMEOUT;
-	if(started)
-	{
+	if (started) {
 		SDA_READ();
 
 		I2CDELAY(I2C_DELAY_TIME);
 
 		while(SCL_READ() == CFALSE)	// clock stretching.... need timeout code
 		{
-			if(timeout-- == 0)
-			{
+			if(timeout-- == 0) {
 				dprintf("I2C_Start CLK Timeout Arbitration Fail\r\n");
 				return CFALSE;
 			}
@@ -146,8 +144,7 @@ static CBOOL I2C_Start(void)
 		I2CDELAY(I2C_DELAY_TIME);
 	}
 
-	if(SDA_READ() == CFALSE)
-	{
+	if (SDA_READ() == CFALSE) {
 		dprintf("I2C_Start SDA Arbitration Fail\r\n");
 		return CFALSE;	// arbitration_lost
 	}
@@ -171,10 +168,9 @@ static CBOOL I2C_Stop(void)
 
 	I2CDELAY(I2C_DELAY_TIME);
 
-	while(SCL_READ() == CFALSE)	// need timeout code
+	while (SCL_READ() == CFALSE) // need timeout code
 	{
-		if(timeout-- == 0)
-		{
+		if (timeout-- == 0) {
 			dprintf("I2C_Stop CLK Timeout Arbitration Fail\r\n");
 			return CFALSE;
 		}
@@ -187,10 +183,8 @@ static CBOOL I2C_Stop(void)
 
 	started = CFALSE;
 	timeout = STRETCHING_TIMEOUT;
-	while(SDA_READ() == CFALSE)
-	{
-		if(timeout-- == 0)
-		{
+	while (SDA_READ() == CFALSE) {
+		if (timeout-- == 0) {
 			dprintf("I2C_Stop SDA Arbitration Fail\r\n");
 			return CFALSE;	// arbitration_lost
 		}
@@ -208,25 +202,23 @@ static CBOOL I2C_WriteBit(CBOOL Bit)
 
 	I2CDELAY(I2C_DELAY_TIME);
 
-	if(Bit)
+	if (Bit)
 		SDA_READ();
 	else
 		SDA_LOW();
 
 	I2CDELAY(I2C_DELAY_TIME);
 
-	while(SCL_READ() == CFALSE)	// clock stretching.... need timeout code
+	while (SCL_READ() == CFALSE) // clock stretching.... need timeout code
 	{
-		if(timeout-- == 0)
-		{
+		if(timeout-- == 0) {
 			dprintf("I2C_WriteBit CLK Timeout Arbitration Fail\r\n");
 			return CFALSE;
 		}
 		I2CDELAY(I2C_DELAY_TIME);
 	}
 
-	if(Bit && (SDA_READ() == CFALSE))
-	{
+	if (Bit && (SDA_READ() == CFALSE)) {
 		dprintf("I2C_WriteBit SDA Arbitration Fail\r\n");
 		return CFALSE;	// arbitration_lost
 	}
@@ -250,8 +242,7 @@ static CBOOL I2C_ReadBit(CBOOL *Bit)
 
 	while(SCL_READ() == CFALSE);	// clock stretching.... need timeout code
 	{
-		if(timeout-- == 0)
-		{
+		if (timeout-- == 0) {
 			dprintf("I2C_ReadBit CLK Timeout Arbitration Fail\r\n");
 			return CFALSE;
 		}
@@ -276,34 +267,30 @@ static CBOOL I2C_WriteByte(CBOOL SendStart, CBOOL SendStop, U8 Data, CBOOL *nAck
 	dprintf("I2C_WriteByte %X\r\n", Data);
 #endif
 
-	if(SendStart)
-	{
+	if (SendStart) {
 		Arbitration = I2C_Start();
-		if(Arbitration == CFALSE)
+		if (Arbitration == CFALSE)
 			return CFALSE;
 	}
 
-	for(bit = 0; bit < 8; bit++)
-	{
+	for (bit = 0; bit < 8; bit++) {
 		Arbitration = I2C_WriteBit((CBOOL)((Data & 0x80) != 0));
-		if(Arbitration == CFALSE)
+		if (Arbitration == CFALSE)
 			return CFALSE;
 		Data <<= 1;
 	}
 
 	Arbitration = I2C_ReadBit(nAck);
-	if(Arbitration == CFALSE)
+	if (Arbitration == CFALSE)
 		return CFALSE;
-	if(*nAck == CTRUE)
-	{
+	if (*nAck == CTRUE) {
 		dprintf("I2C_WriteByte nack returned\r\n");
 		return CFALSE;
 	}
 
-	if(SendStop)
-	{
+	if (SendStop) {
 		Arbitration = I2C_Stop();
-		if(Arbitration == CFALSE)
+		if (Arbitration == CFALSE)
 			return CFALSE;
 	}
 
@@ -317,32 +304,30 @@ static CBOOL I2C_ReadByte(CBOOL nAck, CBOOL SendStop, U8 *pData)
 	CBOOL result, rBit;
 
 #if (I2C_GPIO_DEBUG == 1)
-	dprintf("I2C_ReadByte %s\r\n", SendStop?"Stop":"Nstop");
+	dprintf("I2C_ReadByte %s\r\n", SendStop ? "Stop" : "Nstop");
 #endif
-	for(bit = 0; bit < 8; bit++)
-	{
+	for (bit = 0; bit < 8; bit++) {
 		result = I2C_ReadBit(&rBit);
-		if(result == CFALSE)
+		if (result == CFALSE)
 			return CFALSE;
-		byte = (byte<<1) | (rBit?1:0);
+		byte = (byte << 1) | (rBit ? 1 : 0);
 	}
 	*pData = byte;
 
 	result = I2C_WriteBit(nAck);
-	if(result == CFALSE)
+	if (result == CFALSE)
 		return CFALSE;
 
-	if(SendStop)
-	{
+	if (SendStop) {
 		result = I2C_Stop();
-		if(result == CFALSE)
+		if (result == CFALSE)
 			return CFALSE;
 	}
 
 	return CTRUE;
 }
 
-CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8* pData, U32 Length)
+CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length)
 {
 	CBOOL nAck, result;
 	U32 byte;
@@ -351,46 +336,38 @@ CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8* pData, U32 Length)
 	dprintf("I2C_Read %d\r\n", Length);
 #endif
 	result = I2C_WriteByte(CTRUE, CFALSE, DeviceAddress<<1 | I2CWRITE, &nAck);
-	if(result == CFALSE)
-	{
+	if(result == CFALSE) {
 		dprintf("I2C Device Address Write Abitration Error\r\n");
 		return CFALSE;
 	}
-	if(nAck == CTRUE)
-	{
+	if (nAck == CTRUE) {
 		dprintf("I2C Device Address Write Acknowledge Error\r\n");
 		return CFALSE;
 	}
 
 	result = I2C_WriteByte(CFALSE, CFALSE, RegisterAddress, &nAck);
-	if(result == CFALSE)
-	{
+	if(result == CFALSE) {
 		dprintf("I2C Register Address Write Abitration Error\r\n");
 		return CFALSE;
 	}
-	if(nAck == CTRUE)
-	{
+	if (nAck == CTRUE) {
 		dprintf("I2C Register Address Write Acknowledge Error\r\n");
 		return CFALSE;
 	}
 	result = I2C_WriteByte(CTRUE, CFALSE, DeviceAddress<<1 | I2CREAD, &nAck);
-	if(result == CFALSE)
-	{
+	if (result == CFALSE) {
 		dprintf("I2C Device Address Write Abitration Error\r\n");
 		return CFALSE;
 	}
-	if(nAck == CTRUE)
-	{
+	if (nAck == CTRUE) {
 		dprintf("I2C Device Address Write Acknowledge Error\r\n");
 		return CFALSE;
 	}
 
-	for(byte = 0; byte < Length; )
-	{
+	for(byte = 0; byte < Length; ) {
 		byte++;
 		result = I2C_ReadByte((byte==Length)?CTRUE:CFALSE, (byte==Length)?CTRUE:CFALSE, pData++);
-		if(result == CFALSE)
-		{
+		if (result == CFALSE) {
 			dprintf("I2C Data Read Abitration Error\r\n");
 			return CFALSE;
 		}
@@ -399,7 +376,7 @@ CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8* pData, U32 Length)
 	return CTRUE;
 }
 
-CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8* pData, U32 Length)
+CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length)
 {
 	CBOOL nAck, result;
 	U32 byte;
@@ -408,40 +385,33 @@ CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8* pData, U32 Length)
 	dprintf("I2C_Write %d\r\n", Length);
 #endif
 	result = I2C_WriteByte(CTRUE, CFALSE, DeviceAddress<<1 | I2CWRITE, &nAck);
-	if(result == CFALSE)
-	{
+	if (result == CFALSE) {
 		dprintf("I2C Device Address Write Abitration Error\r\n");
 		return CFALSE;
 	}
-	if(nAck == CTRUE)
-	{
+	if (nAck == CTRUE) {
 		dprintf("I2C Device Address Write Acknowledge Error\r\n");
 		return CFALSE;
 	}
 
 	result = I2C_WriteByte(CFALSE, CFALSE, RegisterAddress, &nAck);
-	if(result == CFALSE)
-	{
+	if (result == CFALSE) {
 		dprintf("I2C Register Address Write Abitration Error\r\n");
 		return CFALSE;
 	}
-	if(nAck == CTRUE)
-	{
+	if (nAck == CTRUE) {
 		dprintf("I2C Register Address Write Acknowledge Error\r\n");
 		return CFALSE;
 	}
 
-	for(byte = 0; byte < Length; )
-	{
+	for (byte = 0; byte < Length;) {
 		byte++;
 		result = I2C_WriteByte(CFALSE, (byte==Length)?CTRUE:CFALSE, *pData++, &nAck);
-		if(result == CFALSE)
-		{
+		if (result == CFALSE) {
 			dprintf("I2C Data Write Abitration Error\r\n");
 			return CFALSE;
 		}
-		if(nAck == CTRUE)
-		{
+		if (nAck == CTRUE) {
 			dprintf("I2C Data Write Acknowledge Error\r\n");
 			return CFALSE;
 		}

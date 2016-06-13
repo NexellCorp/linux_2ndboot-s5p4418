@@ -1,11 +1,25 @@
-#include "sysHeader.h"
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : Base
+ *      File            : clockinit.c
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 
+ */
+#include "sysheader.h"
 
 #if 1   //(CFG_NSIH_EN == 0)
 
 // system controller
 //#define SYSPLLCH      *(volatile unsigned long *)(0xc0010268)
-
-
 
 // PMS for PLL0, 1
 
@@ -313,15 +327,15 @@ void NX_CLKPWR_SetOSCFreq( U32 FreqKHz )
 
 U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber)
 {
-    U32 regvalue, regvalue1, nP, nM, nS, nK;
-    U32 temp = 0;
+	U32 regvalue, regvalue1, nP, nM, nS, nK;
+	U32 temp = 0;
 
-    regvalue = pReg_ClkPwr->PLLSETREG[PllNumber];
-    regvalue1 = pReg_ClkPwr->PLLSETREG_SSCG[PllNumber];
-    nP = (regvalue >> PLL_P) & 0x3F;
-    nM = (regvalue >> PLL_M) & 0x3FF;
-    nS = (regvalue >> PLL_S) & 0xFF;
-    nK = (regvalue1 >> PLL_K) & 0xFFFF;
+	regvalue = pReg_ClkPwr->PLLSETREG[PllNumber];
+	regvalue1 = pReg_ClkPwr->PLLSETREG_SSCG[PllNumber];
+	nP = (regvalue >> PLL_P) & 0x3F;
+	nM = (regvalue >> PLL_M) & 0x3FF;
+	nS = (regvalue >> PLL_S) & 0xFF;
+	nK = (regvalue1 >> PLL_K) & 0xFFFF;
 
     if ((PllNumber > 1) && nK) {
         temp = (getquotient((getquotient((nK * 1000), 65536) * __g_OSC_KHz),nP)>>nS);
@@ -338,44 +352,47 @@ U32 NX_CLKPWR_GetSrcPll(U32 Divider)
 
 U32 NX_CLKPWR_GetDivideValue(U32 Divider)
 {
-    U32 regvalue = pReg_ClkPwr->DVOREG[Divider];
-    return ((((regvalue>>DVO3)&0x3F)+1)<<24) | ((((regvalue>>DVO2)&0x3F)+1)<<16) | ((((regvalue>>DVO1)&0x3F)+1)<<8) | ((((regvalue>>DVO0)&0x3F)+1)<<0);
+	U32 regvalue = pReg_ClkPwr->DVOREG[Divider];
+	return ((((regvalue >> DVO3) & 0x3F) + 1) << 24) |
+	       ((((regvalue >> DVO2) & 0x3F) + 1) << 16) |
+	       ((((regvalue >> DVO1) & 0x3F) + 1) << 8) |
+	       ((((regvalue >> DVO0) & 0x3F) + 1) << 0);
 }
 
+#define _GET_PLL01(_MHz, _val)													\
+	_val = (U32)((1UL << 28) | (PLL01_PMS_##_MHz##MHZ_P << PLL_P) |				\
+		     (PLL01_PMS_##_MHz##MHZ_M << PLL_M) |								\
+		     (PLL01_PMS_##_MHz##MHZ_S << PLL_S));
 
-#define _GET_PLL01(_MHz, _val) \
-    _val = (U32)((1UL<<28)|(PLL01_PMS_##_MHz##MHZ_P<<PLL_P)|(PLL01_PMS_##_MHz##MHZ_M<<PLL_M)|(PLL01_PMS_##_MHz##MHZ_S<<PLL_S));
+#define _GET_PLL23(_MHz, _val)													\
+	_val = (U32)((1UL << 28) | (PLL23_PMS_##_MHz##MHZ_P << PLL_P) |				\
+		     (PLL23_PMS_##_MHz##MHZ_M << PLL_M) |								\
+		     (PLL23_PMS_##_MHz##MHZ_S << PLL_S));
 
-#define _GET_PLL23(_MHz, _val) \
-    _val = (U32)((1UL<<28)|(PLL23_PMS_##_MHz##MHZ_P<<PLL_P)|(PLL23_PMS_##_MHz##MHZ_M<<PLL_M)|(PLL23_PMS_##_MHz##MHZ_S<<PLL_S));
-
-#define _GET_PLL23K(_MHz, _val) \
-    _val = (U32)((PLL23_PMS_##_MHz##MHZ_K<<PLL_K)|0x0104);
+#define _GET_PLL23K(_MHz, _val)													\
+	_val = (U32)((PLL23_PMS_##_MHz##MHZ_K << PLL_K) | 0x0104);
 
 #if defined(MEM_TYPE_LPDDR23)
 void setMemPLL(int CAafter)
 {
 #if 1
-    U32 PLL_PMS, PLL23_K;
+	U32 PLL_PMS, PLL23_K;
 
-    if (CAafter)
-    {
+	if (CAafter) {
 #if (CFG_NSIH_EN == 0)
-        _GET_PLL23(800, PLL_PMS);
-        _GET_PLL23K(800, PLL23_K);
+		_GET_PLL23(800, PLL_PMS);
+		_GET_PLL23K(800, PLL23_K);
 #else
-        PLL_PMS = pSBI->PLL[3];
-        PLL23_K = pSBI->PLLSPREAD[1];
+		PLL_PMS = pSBI->PLL[3];
+		PLL23_K = pSBI->PLLSPREAD[1];
 #endif
-    }
-    else
-    {
-        _GET_PLL23(50, PLL_PMS);
-        _GET_PLL23K(50, PLL23_K);
-    }
+	} else {
+		_GET_PLL23(50, PLL_PMS);
+		_GET_PLL23K(50, PLL23_K);
+	}
 
-    pReg_ClkPwr->PLLSETREG[3]        = (U32)((1UL<<28) | PLL_PMS);
-    pReg_ClkPwr->PLLSETREG_SSCG[3]   = (U32)PLL23_K;
+	pReg_ClkPwr->PLLSETREG[3] = (U32)((1UL << 28) | PLL_PMS);
+	pReg_ClkPwr->PLLSETREG_SSCG[3] = (U32)PLL23_K;
 #endif
 
     __pllchange(pReg_ClkPwr->PWRMODE | 0x1<<15, &pReg_ClkPwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
@@ -389,7 +406,7 @@ void setMemPLL(int CAafter)
         }
     }
 }
-#endif  // #if defined(MEM_TYPE_LPDDR23)
+#endif // #if defined(MEM_TYPE_LPDDR23)
 
 void initClock(void)
 {
@@ -523,10 +540,10 @@ void PLLDynamicChange(U32 Freq)
 
 
 
-//		4. Change to PLL clock
-//			 PLLSETREG0.NPLLBYPASS = 1; // Change PLL clock
-//			 CLKMODEREG.UPDATE_PLL[0] =1
-//			 while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
+	//		4. Change to PLL clock
+	//			 PLLSETREG0.NPLLBYPASS = 1; // Change PLL clock
+	//			 CLKMODEREG.UPDATE_PLL[0] =1
+	//			 while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
 
 	pReg_ClkPwr->PLLSETREG[CPU_CLKSRC] |= (1<<28);	// pll bypass off, pll clock use
 
@@ -539,52 +556,52 @@ void PLLDynamicChange(U32 Freq)
 void printClkInfo(void)
 {
 #if 0
-    SYSMSG(" PLL0: %d   PLL1: %d   PLL2: %d   PLL3: %d\r\n\r\n",
-            NX_CLKPWR_GetPLLFrequency(0),
-            NX_CLKPWR_GetPLLFrequency(1),
-            NX_CLKPWR_GetPLLFrequency(2),
-            NX_CLKPWR_GetPLLFrequency(3));
+	SYSMSG(" PLL0: %d   PLL1: %d   PLL2: %d   PLL3: %d\r\n\r\n",
+			NX_CLKPWR_GetPLLFrequency(0),
+			NX_CLKPWR_GetPLLFrequency(1),
+			NX_CLKPWR_GetPLLFrequency(2),
+			NX_CLKPWR_GetPLLFrequency(3));
 
-    SYSMSG(" Divider0 PLL: %d CPU:%d   CPU BUS:%d\r\n",
-            NX_CLKPWR_GetSrcPll(0),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)), ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)),
-                    ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
-                    ((NX_CLKPWR_GetDivideValue(0)>> 8)&0x3F)));
+	SYSMSG(" Divider0 PLL: %d CPU:%d   CPU BUS:%d\r\n",
+			NX_CLKPWR_GetSrcPll(0),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)), ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)),
+					((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
+				((NX_CLKPWR_GetDivideValue(0)>> 8)&0x3F)));
 
-    SYSMSG(" Divider1 PLL: %d BCLK:%d   PCLK:%d\r\n",
-            NX_CLKPWR_GetSrcPll(1),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1)),((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1))
-                    ,((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(1)>> 8)&0x3F)));
+	SYSMSG(" Divider1 PLL: %d BCLK:%d   PCLK:%d\r\n",
+			NX_CLKPWR_GetSrcPll(1),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1)),((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1))
+					,((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(1)>> 8)&0x3F)));
 
-    SYSMSG(" Divider2 PLL: %d MDCLK:%d   MCLK:%d   \r\n\t\t MBCLK:%d   MPCLK:%d\r\n",
-            NX_CLKPWR_GetSrcPll(2),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F)),
-            getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F)),
-            getquotient(getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>>24)&0x3F)));
+	SYSMSG(" Divider2 PLL: %d MDCLK:%d   MCLK:%d   \r\n\t\t MBCLK:%d   MPCLK:%d\r\n",
+			NX_CLKPWR_GetSrcPll(2),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+				,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+					,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F)),
+			getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+						,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
+					,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F)),
+			getquotient(getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+							,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
+						,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
+					,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(2)>>24)&0x3F)));
 
-    SYSMSG(" Divider3 PLL: %d G3D BCLK:%d\r\n",
-            NX_CLKPWR_GetSrcPll(3),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(3)),((NX_CLKPWR_GetDivideValue(3)>> 0)&0x3F)));
+	SYSMSG(" Divider3 PLL: %d G3D BCLK:%d\r\n",
+			NX_CLKPWR_GetSrcPll(3),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(3)),((NX_CLKPWR_GetDivideValue(3)>> 0)&0x3F)));
 
-    SYSMSG(" Divider4 PLL: %d MPEG BCLK:%d   MPEG PCLK:%d\r\n\r\n",
-            NX_CLKPWR_GetSrcPll(4),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4)),((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4))
-                    ,((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(4)>> 8)&0x3F)));
+	SYSMSG(" Divider4 PLL: %d MPEG BCLK:%d   MPEG PCLK:%d\r\n\r\n",
+			NX_CLKPWR_GetSrcPll(4),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4)),((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4))
+					,((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(4)>> 8)&0x3F)));
 #endif
 }

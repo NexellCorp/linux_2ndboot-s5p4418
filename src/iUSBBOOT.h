@@ -1,4 +1,20 @@
 /*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : USB
+ *      File            : iUSBBOOT.h
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 
+ */
+/*
  * (C) Copyright 2010
  * sangjong han, Nexell Co, <hans@nexell.co.kr>
  *
@@ -231,9 +247,9 @@ struct NX_USB_OTG_RegisterSet
 	volatile U32 PCGCCTL;							/* 0x0E00 R/W Power and Clock Gating Control Register */
 	volatile U32 GReserved1[(0x1000-0xE04)/4];		/* 0x0E04 ~ 0x0FFC	Reserved */
 	volatile U32 EPFifo[15][1024];					/* 0x1000 ~ 0xFFFC Endpoint Fifo */
-//	volatile U32 EPFifo[16][1024];					/* 0x1000 ~ 0x10FFC Endpoint Fifo */
-//	volatile U32 GReserved2[(0x20000-0x11000)/4];	/* 0x11000 ~ 0x20000 Reserved */
-//	volatile U32 DEBUGFIFO[0x8000];					/* 0x20000 ~ 0x3FFFC Debug Purpose Direct Fifo Acess Register */
+	//	volatile U32 EPFifo[16][1024];					/* 0x1000 ~ 0x10FFC Endpoint Fifo */
+	//	volatile U32 GReserved2[(0x20000-0x11000)/4];	/* 0x11000 ~ 0x20000 Reserved */
+	//	volatile U32 DEBUGFIFO[0x8000];					/* 0x20000 ~ 0x3FFFC Debug Purpose Direct Fifo Acess Register */
 };
 
 /*definitions related to CSR setting */
@@ -343,7 +359,7 @@ typedef enum
 	USB_HIGH,
 	USB_FULL,
 	USB_LOW
-//	,0xFFFFFFFFUL
+		//	,0xFFFFFFFFUL
 } USB_SPEED;
 
 typedef enum

@@ -1,6 +1,23 @@
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : diskio
+ *      File            : diskio.h
+ *      Description     :
+ *      Author          : Hans
+ *      History         : 
+ */
+
 /*-----------------------------------------------------------------------
-/  Low level disk interface modlue include file  R0.07   (C)ChaN, 2009
-/-----------------------------------------------------------------------*/
+  /  Low level disk interface modlue include file  R0.07   (C)ChaN, 2009
+  /-----------------------------------------------------------------------*/
 
 #ifndef _DISKIO
 
@@ -19,22 +36,17 @@ typedef enum {
 	RES_PARERR		/* 4: Invalid Parameter */
 } DRESULT;
 
-
 /*---------------------------------------*/
 /* Prototypes for disk control functions */
-
-DSTATUS disk_initialize (U8);
-DSTATUS disk_status (U8);
-DRESULT disk_read (U8, U8*, U32, U8, U32);
-
-
+DSTATUS disk_initialize(U8);
+DSTATUS disk_status(U8);
+DRESULT disk_read(U8, U8 *, U32, U8, U32);
 
 /* Disk Status Bits (DSTATUS) */
 
 #define STA_NOINIT		0x01	/* Drive not initialized */
 #define STA_NODISK		0x02	/* No medium in the drive */
 #define STA_PROTECT		0x04	/* Write protected */
-
 
 /* Command code for disk_ioctrl() */
 
@@ -56,7 +68,6 @@ DRESULT disk_read (U8, U8*, U32, U8, U32);
 #define ATA_GET_REV			20
 #define ATA_GET_MODEL		21
 #define ATA_GET_SN			22
-
 
 #define _DISKIO
 #endif

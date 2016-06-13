@@ -1,21 +1,19 @@
-//;-------------------------------------------------------------------------------
-//;
-//; Copyright (C) 2009 Nexell Co., All Rights Reserved
-//; Nexell Co. Proprietary & Confidential
-//;
-//; NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
-//; AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
-//; BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
-//; FOR A PARTICULAR PURPOSE.
-//;
-//; Module      :
-//; File        :
-//; Description : core define
-//; Author      : Hans
-//; History     :
-//;     2013-01-10  Hans, for cortex A9
-//;-------------------------------------------------------------------------------
-
+/*
+ *      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ *      Nexell Co. Proprietary & Confidential
+ *
+ *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ *	FITNESS
+ *      FOR A PARTICULAR PURPOSE.
+ *
+ *      Module          : Base
+ *      File            : nx_pyrope.h
+ *      Description     : 
+ *      Author          : Hans
+ *      History         : 2013-01-10  Hans, for cortex A9
+ */
 #ifndef NX_ARM_H
 #define NX_ARM_H
 
