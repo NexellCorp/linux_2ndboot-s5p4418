@@ -128,10 +128,8 @@ void DMC_Delay(int milisecond);
 
 extern void I2C_Init(U8 gpioGRP, U8 gpioSCL, U8 gpioSDA, U32 gpioSCLAlt, U32 gpioSDAAlt);
 extern void  I2C_Deinit( void );
-extern CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData,
-		U32 Length);
-extern CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData,
-		U32 Length);
+extern CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length);
+extern CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length);
 
 #if (AXP_I2C_GPIO_GRP > -1)
 static U8 axp228_get_dcdc_step(int want_vol, int step, int min, int max)
@@ -257,12 +255,12 @@ void PMIC_MP8845(void)
 
 #if defined(BF700_PMIC_INIT)
 	pData[0] = 75 | 1 << 7; // 1.1V
-	// pData[0] = 90 | 1<<7;     // 1.2021V
+//	pData[0] = 90 | 1<<7;     // 1.2021V
 #endif
 #if defined(AVN_PMIC_INIT)
 	pData[0] = 75 | 1 << 7; // 1.1V
-	//	pData[0] = 79 | 1<<7;	// 1.125V
-	//	pData[0] = 90 | 1 << 7; // 1.2021V
+//	pData[0] = 79 | 1<<7;	// 1.125V
+//	pData[0] = 90 | 1 << 7; // 1.2021V
 #endif
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
 
