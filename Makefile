@@ -6,8 +6,8 @@
 #	BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
 #	FOR A PARTICULAR PURPOSE.
 #
-#	Module		:
-#	File		:
+#	Module		: Base
+#	File		: Makefile
 #	Description	:
 #	Author		:
 #	History		:
@@ -44,36 +44,39 @@ ifeq ($(INITPMIC),YES)
 SYS_OBJS	+=	i2c_gpio.o pmic.o
 endif
 
-ifeq ($(BUILTINALL),n)
-ifeq ($(BOOTFROM),USB)
+ifeq ($(SUPPORT_USB_BOOT),y)
+CFLAGS		+= -DSUPPORT_USB_BOOT
 SYS_OBJS	+=	iUSBBOOT.o
 endif
-ifeq ($(BOOTFROM),SPI)
+
+ifeq ($(SUPPORT_SPI_BOOT),y)
+CFLAGS		+= -DSUPPORT_SPI_BOOT
 SYS_OBJS	+=	iSPIBOOT.o
 endif
-ifeq ($(BOOTFROM),SDMMC)
+
+ifeq ($(SUPPORT_SDMMC_BOOT),y)
+CFLAGS		+= -DSUPPORT_SDMMC_BOOT
 SYS_OBJS	+=	iSDHCBOOT.o
 endif
-ifeq ($(BOOTFROM),SDFS)
-SYS_OBJS	+=	iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o
+
+ifeq ($(SUPPORT_SDFS_BOOT),y)
+CFLAGS		+= -DSUPPORT_SDFS_BOOT
+SYS_OBJS	+=	diskio.o fatfs.o iSDHCFSBOOT.o
 endif
-ifeq ($(BOOTFROM),NAND)
+
+ifeq ($(SUPPORT_NAND_BOOT),y)
+CFLAGS		+= -DSUPPORT_NAND_BOOT
 SYS_OBJS	+=	iNANDBOOTEC.o
 endif
-ifeq ($(BOOTFROM),UART)
+
+ifeq ($(SUPPORT_UART_BOOT),y)
+CFLAGS		+= -DSUPPORT_UART_BOOT
 SYS_OBJS	+=	iUARTBOOT.o
 endif
 
-else ifeq ($(BUILTINALL),y)
-SYS_OBJS	+=	iUSBBOOT.o
-SYS_OBJS	+=	iSPIBOOT.o
-SYS_OBJS	+=	iSDHCBOOT.o diskio.o fatfs.o iSDHCFSBOOT.o
-#SYS_OBJS	+=	iNANDBOOTEC.o
-#SYS_OBJS	+=	iUARTBOOT.o
+ifeq ($(MEMTEST),y)
+SYS_OBJS	+=	memtester.o
 endif
-
-#SYS_OBJS	+=	memtest_main.o test_list.o
-
 
 SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
 
