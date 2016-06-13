@@ -1,3 +1,18 @@
+ #                                                                              
+ #      Copyright (C) 2012 Nexell Co., All Rights Reserved                      
+ #      Nexell Co. Proprietary & Confidential                                   
+ #                                                                              
+ #      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE  
+ #      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ #      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
+ #      FOR A PARTICULAR PURPOSE.                                               
+ #                                                                              
+ #      Moudle          : Base                                                      
+ #      File            : config.mak
+ #      Description     :                                                       
+ #      Author          : Firware Team                                          
+ #      History         : 2016.06.10 Deoks Modify
+ #
 ###########################################################################
 # Build Version info
 ###########################################################################
@@ -6,7 +21,6 @@ VERINFO				= V062
 ###########################################################################
 # Build Environment
 ###########################################################################
-
 #CHIPNAME			= NXP4330
 CHIPNAME			= S5P4418
 
@@ -14,34 +28,32 @@ DEBUG				= n
 
 MEMTYPE				= DDR3
 #MEMTYPE			= LPDDR3
+MEMTEST				= n
 
-ifeq ($(CHIPNAME), NXP4330)
-BUILTINALL			= n
-INITPMIC			= YES
-else
-BUILTINALL			= n
 INITPMIC			= YES
 #INITPMIC			= NO
-endif
 
-ifeq ($(BUILTINALL),n)
-#BOOTFROM			= USB
-#BOOTFROM			= SPI
-BOOTFROM			= SDMMC
-#BOOTFROM			= SDFS
-#BOOTFROM			= NAND
-#BOOTFROM			= UART
-else ifeq ($(BUILTINALL),y)
-BOOTFROM			= ALL
-endif
+CRC_CHECK			= n
+
+CFLAGS				:=
+
+SUPPORT_USB_BOOT		= y
+SUPPORT_SPI_BOOT		= n
+SUPPORT_SDMMC_BOOT		= y
+SUPPORT_SDFS_BOOT		= n
+SUPPORT_NAND_BOOT		= n
+SUPPORT_UART_BOOT		= n
 
 ifeq ($(CHIPNAME), NXP4330)
 BOARD				= LEPUS
+#BOARD				= NAVI
 else
 #BOARD				= SVT
 #BOARD				= ASB
 #BOARD				= DRONE
 BOARD				= AVN
+#BOARD				= LAVENDA
+#BOARD				?= RAPTOR
 endif
 
 # cross-tool pre-header
@@ -57,15 +69,8 @@ endif
 # Top Names
 ###########################################################################
 PROJECT_NAME			= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
-ifeq ($(INITPMIC), YES)
-TARGET_NAME			= $(PROJECT_NAME)_$(BOARD)_$(BOOTFROM)
-endif
-ifeq ($(INITPMIC), NO)
-TARGET_NAME			= $(PROJECT_NAME)_$(BOOTFROM)
-endif
-
+TARGET_NAME			= bl1-$(shell echo $(BOARD) | tr A-Z a-z)
 LDS_NAME			= pyrope_2ndboot
-
 
 ###########################################################################
 # Directories
@@ -73,11 +78,7 @@ LDS_NAME			= pyrope_2ndboot
 DIR_PROJECT_TOP			=
 
 DIR_OBJOUTPUT			= obj
-ifeq ($(BUILTINALL),n)
-DIR_TARGETOUTPUT		= build_$(BOARD)_$(BOOTFROM)
-else ifeq ($(BUILTINALL),y)
-DIR_TARGETOUTPUT		= build_$(BOARD)
-endif
+DIR_TARGETOUTPUT		= out
 
 CODE_MAIN_INCLUDE		=
 
@@ -97,10 +98,10 @@ GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
 
 ifeq ($(DEBUG), y)
 CFLAGS				= -DNX_DEBUG -O0
-Q				=
+Q					=
 else
 CFLAGS				= -DNX_RELEASE -Os
-Q				= @
+Q					= @
 endif
 
 ###########################################################################
@@ -148,4 +149,13 @@ CFLAGS				+=	-g -Wall				\
 ifeq ($(INITPMIC), YES)
 CFLAGS				+=	-D$(BOARD)_PMIC_INIT
 endif
+ifeq ($(MEMTEST), y)
+#MEMTEST_TYPE			+=	STANDARD
+MEMTEST_TYPE			+=	SIMPLE
+CFLAGS				+=	-D$(MEMTEST_TYPE)_MEMTEST
+endif
 
+ifeq ($(CRC_CHECK), y)
+CHECKSUM			+=	CRC_CHECK
+CFLAGS				+=	-D$(CHECKSUM)_ON
+endif
