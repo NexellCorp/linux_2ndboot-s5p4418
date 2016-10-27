@@ -1,4 +1,4 @@
-#include "sysHeader.h"
+#include "sysheader.h"
 
 #include <nx_drex.h>
 #include <nx_ddrphy.h>
