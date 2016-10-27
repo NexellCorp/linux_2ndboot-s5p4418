@@ -1,6 +1,6 @@
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
-ENTRY(Vectors)
+ENTRY(vectors)
 
 SECTIONS
 {
@@ -9,6 +9,9 @@ SECTIONS
 	.text :
 	{
 		obj/startup.o	(.text)
+		*(.init.text)
+		*(.init.data)
+		*(.init.code)
 		*(.text)
 	}
 
@@ -38,4 +41,3 @@ SECTIONS
 	}
 	__bss_end__ = .;
 }
-

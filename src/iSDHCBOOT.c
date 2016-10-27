@@ -1,19 +1,19 @@
 /*
- *      Copyright (C) 2012 Nexell Co., All Rights Reserved
- *      Nexell Co. Proprietary & Confidential
+ * Copyright (C) 2016  Nexell Co., Ltd.
+ * Author: Sangjong, Han <hans@nexell.co.kr>
  *
- *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
- *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
- *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
- *	FITNESS
- *      FOR A PARTICULAR PURPOSE.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- *      Module          : SDMMC
- *      File            : iSDHCBOOT.c
- *      Description     :
- *      Author          : Hans
- *      History         : 2013.02.06 First implementation
- * 			  2013.08.31 rev1 (port 0, 1, 2 selectable)
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sysheader.h"
 
@@ -33,17 +33,17 @@ void GPIOSetAltFunction(U32 AltFunc);
 U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
 
 //------------------------------------------------------------------------------
-static struct NX_CLKGEN_RegisterSet *const pgSDClkGenReg[3] = {
+static struct NX_CLKGEN_RegisterSet *const __initdata pgSDClkGenReg[3] = {
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN18_MODULE,
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN19_MODULE,
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN20_MODULE
 };
-static U32 const SDResetNum[3] = {
+static U32 const __initdata SDResetNum[3] = {
 	RESETINDEX_OF_SDMMC0_MODULE_i_nRST,
 	RESETINDEX_OF_SDMMC1_MODULE_i_nRST,
 	RESETINDEX_OF_SDMMC2_MODULE_i_nRST
 };
-struct NX_SDMMC_RegisterSet *const pgSDXCReg[3] = {
+struct NX_SDMMC_RegisterSet *const __initdata pgSDXCReg[3] = {
 	(struct NX_SDMMC_RegisterSet *)PHY_BASEADDR_SDMMC0_MODULE,
 	(struct NX_SDMMC_RegisterSet *)PHY_BASEADDR_SDMMC1_MODULE,
 	(struct NX_SDMMC_RegisterSet *)PHY_BASEADDR_SDMMC2_MODULE
@@ -58,7 +58,7 @@ typedef struct {
 	U32 nClkGenDiv;
 } NX_CLKINFO_SDMMC;
 
-CBOOL   NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
+CBOOL __init NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
 {
 	U32 srcFreq;
 	U32 nRetry = 1, nTemp = 0;
@@ -97,7 +97,7 @@ exit_getparam:
 
 //------------------------------------------------------------------------------
 //static CBOOL	NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32 divider )
-static CBOOL	NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32 nFreq )
+static CBOOL __init NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32 nFreq )
 {
 	volatile U32 timeout;
 	register struct NX_SDMMC_RegisterSet * const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
@@ -230,7 +230,7 @@ repeat_7 :
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendCommandInternal(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAND *pCommand)
+static U32 __init NX_SDMMC_SendCommandInternal(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAND *pCommand)
 {
 	U32 cmd, flag;
 	U32 status = 0;
@@ -334,7 +334,7 @@ End:
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendStatus(SDXCBOOTSTATUS *pSDXCBootStatus)
+static U32 __init NX_SDMMC_SendStatus(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	U32 status;
 	NX_SDMMC_COMMAND cmd;
@@ -388,7 +388,7 @@ static U32 NX_SDMMC_SendStatus(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendCommand(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAND *pCommand)
+static U32 __init NX_SDMMC_SendCommand(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAND *pCommand)
 {
 	U32 status;
 
@@ -401,7 +401,7 @@ static U32 NX_SDMMC_SendCommand(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAN
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendAppCommand(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAND *pCommand)
+static U32 __init NX_SDMMC_SendAppCommand(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COMMAND *pCommand)
 {
 	U32 status;
 	NX_SDMMC_COMMAND cmd;
@@ -420,7 +420,7 @@ static U32 NX_SDMMC_SendAppCommand(SDXCBOOTSTATUS *pSDXCBootStatus, NX_SDMMC_COM
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_IdentifyCard(SDXCBOOTSTATUS *pSDXCBootStatus)
+static CBOOL __init NX_SDMMC_IdentifyCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	S32 timeout;
 	U32 HCS, RCA;
@@ -584,7 +584,7 @@ static CBOOL NX_SDMMC_IdentifyCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_SelectCard(SDXCBOOTSTATUS *pSDXCBootStatus)
+static CBOOL __init NX_SDMMC_SelectCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	U32 status;
 	NX_SDMMC_COMMAND cmd;
@@ -600,7 +600,7 @@ static CBOOL NX_SDMMC_SelectCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_SetCardDetectPullUp(SDXCBOOTSTATUS *pSDXCBootStatus, CBOOL bEnb)
+static CBOOL __init NX_SDMMC_SetCardDetectPullUp(SDXCBOOTSTATUS *pSDXCBootStatus, CBOOL bEnb)
 {
 	U32 status;
 	NX_SDMMC_COMMAND cmd;
@@ -616,7 +616,7 @@ static CBOOL NX_SDMMC_SetCardDetectPullUp(SDXCBOOTSTATUS *pSDXCBootStatus, CBOOL
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_SetBusWidth(SDXCBOOTSTATUS *pSDXCBootStatus, U32 buswidth)
+static CBOOL __init NX_SDMMC_SetBusWidth(SDXCBOOTSTATUS *pSDXCBootStatus, U32 buswidth)
 {
 	U32 status;
 	NX_SDMMC_COMMAND cmd;
@@ -647,7 +647,7 @@ static CBOOL NX_SDMMC_SetBusWidth(SDXCBOOTSTATUS *pSDXCBootStatus, U32 buswidth)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL	NX_SDMMC_SetBlockLength( SDXCBOOTSTATUS * pSDXCBootStatus, U32 blocklength )
+static CBOOL __init NX_SDMMC_SetBlockLength( SDXCBOOTSTATUS * pSDXCBootStatus, U32 blocklength )
 {
 	U32 status;
 	NX_SDMMC_COMMAND cmd;
@@ -668,7 +668,7 @@ static CBOOL	NX_SDMMC_SetBlockLength( SDXCBOOTSTATUS * pSDXCBootStatus, U32 bloc
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
+CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	register struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
@@ -750,7 +750,7 @@ CBOOL NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
+CBOOL __init NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	register struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
@@ -770,7 +770,7 @@ CBOOL NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // U32 option )
+CBOOL __init NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // U32 option )
 {
 	//--------------------------------------------------------------------------
 	// card identification mode : Identify & Initialize
@@ -806,7 +806,7 @@ CBOOL NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // U32 option )
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
+CBOOL __init NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	//	NX_SDMMC_SetClock( pSDXCBootStatus, CFALSE, SDXC_CLKGENDIV_400KHZ );
 	NX_SDMMC_SetClock( pSDXCBootStatus, CFALSE, 400000 );
@@ -814,7 +814,7 @@ CBOOL NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus, U32 numberOfSector, U32 *pdwBuffer)
+static CBOOL __init NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus, U32 numberOfSector, U32 *pdwBuffer)
 {
 	U32		count;
 	register struct NX_SDMMC_RegisterSet * const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
@@ -883,7 +883,7 @@ static CBOOL NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus, U32 number
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_ReadSectors(SDXCBOOTSTATUS *pSDXCBootStatus, U32 SectorNum,
+CBOOL __init NX_SDMMC_ReadSectors(SDXCBOOTSTATUS *pSDXCBootStatus, U32 SectorNum,
 		U32 numberOfSector, U32 *pdwBuffer)
 {
 	CBOOL	result = CFALSE;
@@ -976,6 +976,7 @@ End:
 }
 
 //------------------------------------------------------------------------------
+extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size);
 static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo *pTBI) // U32 option )
 {
 	CBOOL	result = CFALSE;
@@ -1053,7 +1054,7 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
    dat2 b  5 1 gpio:0        dat2 d 26 1 gpio:0        dat2 c 22 2 gpio:1
    dat3 b  7 1 gpio:0        dat3 d 27 1 gpio:0        dat3 c 23 2 gpio:1
  */
-void NX_SDPADSetALT(U32 PortNum)
+void __init NX_SDPADSetALT(U32 PortNum)
 {
 	if(PortNum == 0) {
 		register U32 *pGPIOARegA1 = (U32 *)&pReg_GPIO[GPIO_GROUP_A]->GPIOxALTFN[1];	// a 29, a 31
@@ -1177,7 +1178,79 @@ void NX_SDPADSetGPIO(U32 PortNum)
 }
 #endif
 
-//------------------------------------------------------------------------------
+#ifdef CHIPID_NXP4330
+/*
+ * In fact, a function that reads the remaining data.
+ */
+static int __init sdmmc_read(SDXCBOOTSTATUS *pSDXCBootStatus, unsigned int devaddr,
+	unsigned int loadaddr, unsigned int loadsize)
+{
+	register struct NX_SDMMC_RegisterSet * const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
+	unsigned int ret = CFALSE;
+
+	if (CTRUE == NX_SDMMC_Open(pSDXCBootStatus)) {
+		if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
+			pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;			// Reset the FIFO.
+			while(pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST);		// Wait until the FIFO reset is completed.
+		}
+
+		ret = NX_SDMMC_ReadSectors(pSDXCBootStatus, devaddr/BLOCK_LENGTH,
+				(loadsize + BLOCK_LENGTH - 1)/BLOCK_LENGTH, (U32*)loadaddr);
+
+		if(ret == CFALSE) {
+//			printf("cannot read boot header! SDMMC boot failure\r\n");
+			return -1;
+		}
+	} else {
+//		printf("Cannot Detect SDMMC\r\n");
+		return -1;
+	}
+
+	if (ret == CTRUE)
+		ret = 0;
+	else
+		ret = -1;
+
+	return ret;
+}
+
+/*
+ * The function is added to load a 16K
+ * or more data in BL1.
+ */
+unsigned int __init sdmmc_self_boot(void)
+{
+	struct NX_SecondBootInfo SBI;
+
+	SDXCBOOTSTATUS lSDXCBootStatus;
+	SDXCBOOTSTATUS *pSDXCBootStatus = &lSDXCBootStatus;
+
+	CBOOL ret = 0;
+
+	/* Fix to nxp4330 (PORT0) */
+	pSDXCBootStatus->SDPort = 0;
+
+	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
+	NX_SDMMC_Init(pSDXCBootStatus);
+
+	/* Normal SD(eSD)/MMC ver 4.2 boot */
+	SBI.LOADADDR
+		= BL1_SDRAMBOOT_LOADADDR + BL1_SDMMCBOOT_LOADSIZE;
+	SBI.DBI.SDMMCBI.PortNumber = pSDXCBootStatus->SDPort;
+	SBI.DEVICEADDR
+		= BL1_SDMMCBOOT_DEVADDR + BL1_SDMMCBOOT_LOADSIZE;
+	SBI.LOADSIZE
+		= BL1_SDMMCBOOT_LOADSIZE - BL1_STACKSIZE;
+	ret = sdmmc_read(pSDXCBootStatus,
+		SBI.DEVICEADDR, SBI.LOADADDR, SBI.LOADSIZE);
+
+	NX_SDMMC_Close(pSDXCBootStatus);
+	NX_SDMMC_Terminate(pSDXCBootStatus);
+
+	return ret;
+}
+#endif	// #ifdef CHIPID_NXP4330
+
 U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
 {
 	CBOOL result = CFALSE;

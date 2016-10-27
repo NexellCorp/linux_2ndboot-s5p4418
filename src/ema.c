@@ -34,7 +34,7 @@ struct asv_tb_info {
 	int ro;
 };
 
-static struct asv_tb_info asv_tables[] = {
+static struct asv_tb_info __initdata asv_tables[] = {
 	[0] = { .ids = 10, .ro = 110, },
 	[1] = { .ids = 15, .ro = 130, },
 	[2] = { .ids = 20, .ro = 140, },
@@ -44,10 +44,7 @@ static struct asv_tb_info asv_tables[] = {
 
 #define ASV_ARRAY_SIZE  (int)(sizeof(asv_tables)/sizeof(asv_tables[0]))
 
-/* Global Variable */
-int g_cahce_ema;
-
-static inline unsigned int MtoL(unsigned int data, int bits)
+static inline unsigned int __init MtoL(unsigned int data, int bits)
 {
 	unsigned int result = 0, mask = 1;
 	int i = 0;
@@ -60,7 +57,7 @@ static inline unsigned int MtoL(unsigned int data, int bits)
 	return result;
 }
 
-int is_ema3(unsigned int ecid_1, unsigned int ecid_2)
+int __init is_ema3(unsigned int ecid_1, unsigned int ecid_2)
 {
 	int field = 0;
 
@@ -107,7 +104,7 @@ int is_ema3(unsigned int ecid_1, unsigned int ecid_2)
  * According to the arm voltage, it sets the appropriate ema value in use the sram
  * and instruction cache.
  *************************************************************/
-void cache_setup_ema(void)
+void __init cache_setup_ema(void)
 {
 #if (AUTO_DETECT_EMA == 1)
 	unsigned int ecid_1, ecid_2;
@@ -126,8 +123,6 @@ void cache_setup_ema(void)
 	ema = EMA_VALUE; //; cortex-A9 L1 Cache EMA value (1: 1.1V, 3: 1.0V)
 #endif
 
-	g_cahce_ema = ema;
-
 	enableICache(CFALSE);
 	flushICache();
 
@@ -143,6 +138,9 @@ void cache_setup_ema(void)
 
 	enableICache(CTRUE);
 
+#if 0
+	NOTICE("EMA VALUE : %s\r\n", (ema == 3 ? "011" : "001"));
+#endif
 	return;
 }
 
