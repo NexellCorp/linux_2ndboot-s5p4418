@@ -27,7 +27,7 @@ LDFLAGS		=	-Bstatic							\
 SYS_OBJS	=	startup.o secondboot.o armv7_libs.o		\
 			resetcon.o GPIO.o CRC32.o			\
 			clockinit.o debug.o util.o buildinfo.o		\
-			printf.o
+			printf.o ema.o
 #SYS_OBJS	+=	sysbus.o
 
 ifeq ($(MEMTYPE),DDR3)
