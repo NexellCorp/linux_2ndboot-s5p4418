@@ -271,9 +271,11 @@ static int __init nxp4330_self_boot(void)
 	if (pSBI->LOADSIZE > fix_bl1_size) {
 		/* Check to boot type. */
 		switch(boot_option) {
+#if defined(SUPPORT_SDMMC_BOOT)
 			case BOOT_FROM_SDMMC:
 				ret = sdmmc_self_boot();
 				break;
+#endif
 		}
 	}
 
