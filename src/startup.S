@@ -55,7 +55,7 @@ Sleep:
         b       SystemSleep         //; 20
 
 BuildInfo:
-        .word   0x44180602          //; 24, , Chip name - 4418, Build num - v0.6.01
+        .word   0x44180603          //; 24, , Chip name - 4418, Build num - v0.6.03
 
 //        b       DynamicPllChange    //; for Samsung VD
 
