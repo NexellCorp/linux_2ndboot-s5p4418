@@ -49,7 +49,7 @@ U32 iget_fcs(U32 fcs, U32 data)
 /* CRC Calcurate Function
  * CHKSTRIDE is Data Stride.
  */
-#define CHKSTRIDE 1
+#define CHKSTRIDE 8
 U32 __calc_crc(void *addr, int len)
 {
 	U32 *c = (U32 *)addr;
