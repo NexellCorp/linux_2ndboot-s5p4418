@@ -1583,9 +1583,9 @@ void showLockValue(void)
 
         DMC_Delay(10);
     }
-	
+
 #if 1 // Descending Sort - by.deoks
-	struct phy_lock_info* me 
+	struct phy_lock_info* me
 		= (struct phy_lock_info*)(&lock_info[0]);
 
 	unsigned int array_size = 20, k = 0;
@@ -1610,13 +1610,13 @@ void showLockValue(void)
 					{
 						swap = me[j].lock_count[k];
 						me[j].lock_count[k] = me[j+1].lock_count[k];
-						me[j+1].lock_count[k] = swap;			
+						me[j+1].lock_count[k] = swap;
 					}
-				}	
+				}
 			}
 		}
     }
-#endif	
+#endif
 
     printf("\r\n");
 #if 0
@@ -1839,7 +1839,7 @@ void init_DDR3(U32 isResume)
     MR0.MR0.BT      = 1;
     MR0.MR0.CL0     = (temp & 0x1);
     MR0.MR0.CL1     = ((temp>>1) & 0x7);
-    MR0.MR0.DLL     = 0;//1;
+    MR0.MR0.DLL     = 1;//1;
 #if (CFG_NSIH_EN == 0)
     MR0.MR0.WR      = MR0_nWR;
 #else
