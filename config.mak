@@ -21,8 +21,8 @@ VERINFO				= V062
 ###########################################################################
 # Build Environment
 ###########################################################################
-#CHIPNAME			= NXP4330
-CHIPNAME			= S5P4418
+CHIPNAME			= NXP4330
+#CHIPNAME			= S5P4418
 
 DEBUG				= n
 
@@ -37,7 +37,7 @@ CRC_CHECK			= n
 
 CFLAGS				:=
 
-SUPPORT_USB_BOOT		= y
+SUPPORT_USB_BOOT		= n
 SUPPORT_SPI_BOOT		= n
 SUPPORT_SDMMC_BOOT		= y
 SUPPORT_SDFS_BOOT		= n
@@ -45,13 +45,15 @@ SUPPORT_NAND_BOOT		= n
 SUPPORT_UART_BOOT		= n
 
 ifeq ($(CHIPNAME), NXP4330)
-BOARD				= LEPUS
+#BOARD				= LEPUS
+BOARD				= SVM
 #BOARD				= NAVI
 else
 #BOARD				= SVT
 #BOARD				= ASB
 #BOARD				= DRONE
-BOARD				= AVN
+#BOARD				= AVN
+BOARD				= SVM
 #BOARD				= LAVENDA
 #BOARD				?= RAPTOR
 endif
@@ -61,7 +63,7 @@ ifeq ($(OS),Windows_NT)
 CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-none-eabi-
 else
-CROSS_TOOL_TOP			=
+CROSS_TOOL_TOP			= /opt/crosstools/arm-eabi-gcc/bin/
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-eabi-
 endif
 

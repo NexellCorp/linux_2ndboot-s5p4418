@@ -104,6 +104,15 @@ void DMC_Delay(int milisecond);
 #define NXE2000_I2C_SDA_ALT		0
 #endif
 
+#if defined(SVM_PMIC_INIT)
+#undef NXE2000_I2C_GPIO_GRP
+#define NXE2000_I2C_GPIO_GRP 	3 // D group, NXE2000
+#define NXE2000_I2C_SCL 		4
+#define NXE2000_I2C_SDA 		5
+#define NXE2000_I2C_SCL_ALT		0
+#define NXE2000_I2C_SDA_ALT		0
+#endif
+
 #if defined(SVT_PMIC_INIT) || defined(ASB_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
 #define NXE2000_I2C_GPIO_GRP	3 // D group, NXE2000

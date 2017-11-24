@@ -297,7 +297,7 @@ void BootMain(U32 CPUID)
 
 	CPUID = CPUID;
 
-#if defined(AVN) || defined(NAVI) || defined(RAPTOR)
+#if defined(AVN) || defined(NAVI) || defined(RAPTOR) || defined(SVM)
 	debug_ch = 3;
 #endif
 
