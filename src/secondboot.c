@@ -294,6 +294,8 @@ void BootMain(U32 CPUID)
 #endif
 	U32 isResume = 0;
 	U32 debug_ch = 0;
+	unsigned int ecid_1;
+	int ids = 0, ro = 0;
 
 	CPUID = CPUID;
 
@@ -368,6 +370,13 @@ void BootMain(U32 CPUID)
 
 	/* step xx. display the ema information */
 	ema_information();
+#ifdef SUPPORT_ASVTBL
+	ecid_1 = mmio_read_32(&pReg_ECID->ECID[1]);
+	ids = MtoL((ecid_1>>16) & 0xFF, 8);
+	ro  = MtoL((ecid_1>>24) & 0xFF, 8);
+
+	printf("ASV : ids = %d ro = %d \r\n",ids, ro);
+#endif /* SUPPORT_ASVTBL */
 
 #if (CPU_BRINGUP_CHECK == 1)
 	{
@@ -410,7 +419,7 @@ void BootMain(U32 CPUID)
 	init_LPDDR3(isResume);
 #endif
 
-	if (isResume) 
+	if (isResume)
 		exitSelfRefresh();
 
 	SYSMSG("DDR3 Init Done!\r\n");

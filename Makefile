@@ -74,6 +74,14 @@ CFLAGS		+= -DSUPPORT_UART_BOOT
 SYS_OBJS	+=	iUARTBOOT.o
 endif
 
+ifeq ($(SUPPORT_Q100),y)
+CFLAGS		+= -DSUPPORT_Q100
+endif
+
+ifeq ($(SUPPORT_ASVTBL),y)
+CFLAGS		+= -DSUPPORT_ASVTBL
+endif
+
 ifeq ($(MEMTEST),y)
 SYS_OBJS	+=	memtester.o
 endif
@@ -105,7 +113,7 @@ ifeq ($(OS),Windows_NT)
 		@$(MKDIR) $(DIR_TARGETOUTPUT)
 else
 	@if [ ! -L prototype ] ; then			\
-		ln -s ../../../prototype/s5p4418/ prototype ; \
+		ln -s ../../prototype/s5p4418/ prototype ; \
 	fi
 	@if	[ ! -e $(DIR_OBJOUTPUT) ]; then 	\
 		$(MKDIR) $(DIR_OBJOUTPUT);		\

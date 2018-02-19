@@ -43,17 +43,19 @@ SUPPORT_SDMMC_BOOT		= y
 SUPPORT_SDFS_BOOT		= n
 SUPPORT_NAND_BOOT		= n
 SUPPORT_UART_BOOT		= n
+SUPPORT_Q100			= n
+SUPPORT_ASVTBL			= n
 
 ifeq ($(CHIPNAME), NXP4330)
 #BOARD				= LEPUS
-BOARD				= SVM
-#BOARD				= NAVI
+#BOARD				= SVM
+BOARD				= NAVI
 else
 #BOARD				= SVT
 #BOARD				= ASB
 #BOARD				= DRONE
 #BOARD				= AVN
-BOARD				= SVM
+#BOARD				= SVM
 #BOARD				= LAVENDA
 #BOARD				?= RAPTOR
 endif
@@ -63,7 +65,7 @@ ifeq ($(OS),Windows_NT)
 CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-none-eabi-
 else
-CROSS_TOOL_TOP			= /opt/crosstools/arm-eabi-gcc/bin/
+CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-eabi-
 endif
 

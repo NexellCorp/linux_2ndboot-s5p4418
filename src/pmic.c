@@ -129,7 +129,15 @@ void DMC_Delay(int milisecond);
 #include "pmic_nxe1500.h"
 #endif
 #if (NXE2000_I2C_GPIO_GRP > -1)
+#ifdef SUPPORT_ASVTBL
+#include "s5p4418-cpufreq.h"
+#endif /* SUPPORT_ASVTBL */
+#ifdef SUPPORT_Q100
+#include "pmic_nxe2000_Q100.h"
+#else
 #include "pmic_nxe2000.h"
+#endif /* SUPPORT_Q100 */
+
 #endif
 #if (MP8845_PMIC_INIT == 1)
 #include "pmic_mp8845.h"
@@ -139,6 +147,7 @@ extern void I2C_Init(U8 gpioGRP, U8 gpioSCL, U8 gpioSDA, U32 gpioSCLAlt, U32 gpi
 extern void  I2C_Deinit( void );
 extern CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length);
 extern CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length);
+
 
 #if (AXP_I2C_GPIO_GRP > -1)
 static U8 axp228_get_dcdc_step(int want_vol, int step, int min, int max)
@@ -249,7 +258,7 @@ void PMIC_MP8845(void)
 	U8 pData[4];
 
 	/* I2C init for CORE power. */
-	I2C_Init(MP8845_CORE_I2C_GPIO_GRP, MP8845_CORE_I2C_SCL, MP8845_CORE_I2C_SDA, 
+	I2C_Init(MP8845_CORE_I2C_GPIO_GRP, MP8845_CORE_I2C_SCL, MP8845_CORE_I2C_SDA,
 			MP8845_CORE_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
 
 	/* PFM -> PWM mode */
@@ -274,7 +283,7 @@ void PMIC_MP8845(void)
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
 
 	/* I2C init for ARM power. */
-	I2C_Init(MP8845_ARM_I2C_GPIO_GRP, MP8845_ARM_I2C_SCL, MP8845_ARM_I2C_SDA, 
+	I2C_Init(MP8845_ARM_I2C_GPIO_GRP, MP8845_ARM_I2C_SCL, MP8845_ARM_I2C_SDA,
 			MP8845_ARM_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
 
 	/* PFM -> PWM mode */
@@ -313,7 +322,7 @@ void PMIC_NXE1500(void)
 {
 	U8 pData[4];
 
-	I2C_Init(NXE1500_I2C_GPIO_GRP, NXE1500_I2C_SCL, NXE1500_I2C_SDA, 
+	I2C_Init(NXE1500_I2C_GPIO_GRP, NXE1500_I2C_SCL, NXE1500_I2C_SDA,
 			NXE1500_I2C_SCL_ALT, NXE1500_I2C_SDA_ALT);
 
 	// ARM Voltage (Default: 1.25V)
@@ -344,17 +353,39 @@ void PMIC_NXE1500(void)
 void PMIC_NXE2000(void)
 {
 	U8 pData[4];
+	int asvlv=0;
 
 	I2C_Init(NXE2000_I2C_GPIO_GRP, NXE2000_I2C_SCL, NXE2000_I2C_SDA,
 			NXE2000_I2C_SCL_ALT, NXE2000_I2C_SDA_ALT);
 
-#if 1
+#ifdef SUPPORT_ASVTBL
+	asvlv = s5p4418_asv_setup_table();
+	switch(asvlv) {
+		case 0:
+			pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL_0);
+			break;
+		case 1:
+			pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL_1);
+			break;
+		case 2:
+			pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL_2);
+			break;
+		case 3:
+			pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL_3);
+			break;
+		case 4:
+			pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL_4);
+			break;
+
+	}
+	I2C_Write(I2C_ADDR_NXE2000, NXE2000_REG_DC1VOL, pData, 1);
+#else
 	pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL);
 	I2C_Write(I2C_ADDR_NXE2000, NXE2000_REG_DC1VOL, pData, 1);
 
+#endif
 	pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC2_VOL);
 	I2C_Write(I2C_ADDR_NXE2000, NXE2000_REG_DC2VOL, pData, 1);
-#endif
 
 #ifndef LAVENDA_PMIC_INIT
 	pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC4_VOL);
